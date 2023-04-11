@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.github.palexdev.materialfx.controls.MFXButton?>
+<?import io.github.palexdev.materialfx.controls.MFXFilterComboBox?>
+<?import io.github.palexdev.materialfx.controls.MFXPasswordField?>
+<?import io.github.palexdev.materialfx.controls.MFXTextField?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.proyecto_pruebainsert.InsertController">
+   <children>
+      <MFXTextField fx:id="nameField" floatingText="Nombre" layoutX="79.0" layoutY="68.0" prefHeight="50.0" prefWidth="301.0" />
+      <MFXTextField fx:id="mailField" floatingText="Correo" layoutX="79.0" layoutY="136.0" prefHeight="50.0" prefWidth="301.0" />
+      <MFXPasswordField fx:id="passwordField" floatingText="Contraseña" layoutX="79.0" layoutY="214.0" prefHeight="50.0" prefWidth="302.0" />
+      <MFXFilterComboBox fx:id="roleCombo" layoutX="158.0" layoutY="300.0" prefHeight="40.0" prefWidth="144.0" />
+      <MFXButton layoutX="458.0" layoutY="148.0" onAction="#addUser" prefHeight="26.0" prefWidth="102.0" text="Iniciar sesión" />
+      <Label layoutX="100.0" layoutY="312.0" text="Rol:" />
+   </children>
+</AnchorPane>
