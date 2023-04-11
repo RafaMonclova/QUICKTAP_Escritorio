@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.github.palexdev.materialfx.controls.MFXButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" prefHeight="545.0" prefWidth="881.0" stylesheets="@../../../estilo.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.PrincipalController">
+   <children>
+      <AnchorPane layoutY="72.0" prefHeight="479.0" prefWidth="94.0" style="-fx-background-color: #454545;" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="72.0">
+         <children>
+            <VBox prefHeight="551.0" prefWidth="74.0" style="-fx-padding: 10px; -fx-spacing: 20px;" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <MFXButton fx:id="btnHome" disable="true" ellipsisString="" prefHeight="62.0" prefWidth="54.0" style="-fx-background-color: #454545;">
+                     <graphic>
+                        <ImageView fx:id="imagen" fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../icons8_home_60px.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
+                  <MFXButton fx:id="btnAñadirPropietario" disable="true" ellipsisString="" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                     <graphic>
+                        <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../icons8_add_user_male_60px.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
+                  <MFXButton fx:id="btnAñadirEstabl" disable="true" ellipsisString="" layoutX="20.0" layoutY="102.0" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                     <graphic>
+                        <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../shop.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
+                  <Label prefHeight="50.0" prefWidth="98.0" />
+                  <MFXButton fx:id="btnInfoUsuario" disable="true" ellipsisString="" layoutX="20.0" layoutY="184.0" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                     <graphic>
+                        <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../icons8_more_info_60px.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
+                  <MFXButton fx:id="btnSalir" disable="true" ellipsisString="" layoutX="20.0" layoutY="344.0" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                     <graphic>
+                        <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../icons8_Logout_Rounded_60px.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="panelMenu" layoutX="74.0" layoutY="72.0" prefHeight="479.0" prefWidth="207.0" style="-fx-background-color: #454545;" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="72.0">
+         <children>
+            <VBox layoutY="10.0" prefHeight="469.0" prefWidth="207.0" style="-fx-spacing: 20px; -fx-padding: 10px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Inicio" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="10.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Nuevo propietario" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="76.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Nuevo establecimiento" textFill="WHITE">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </MFXButton>
+                  <Label prefHeight="51.0" prefWidth="186.0" />
+                  <MFXButton fx:id="btnLabelUsuario" alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="143.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Mi perfil" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="209.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Salir" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+      <AnchorPane prefHeight="63.0" prefWidth="882.0" style="-fx-background-color: #FF6000;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+         <children>
+            <HBox layoutX="3.0" layoutY="1.0" prefHeight="78.0" prefWidth="776.0" style="-fx-padding: 10px;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+               <children>
+                  <MFXButton fx:id="btnMenu" ellipsisString="" prefHeight="58.0" prefWidth="74.0" style="-fx-background-color: #FF6000;">
+                     <graphic>
+                        <ImageView fx:id="burger" fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../burger.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
+                  <Label alignment="CENTER" prefHeight="58.0" prefWidth="202.0" text="Principal">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <ImageView fitHeight="56.0" fitWidth="85.0" layoutX="800.0" layoutY="13.0" pickOnBounds="true" preserveRatio="true" AnchorPane.rightAnchor="30.0">
+               <image>
+                  <Image url="@../../../logo.png" />
+               </image>
+            </ImageView>
+         </children>
+      </AnchorPane>
+   </children>
+</AnchorPane>

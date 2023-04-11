@@ -1,4 +1,4 @@
-package com.mycompany.proyecto_pruebainsert;
+package com.mycompany.quicktap_escritorio;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -39,21 +39,22 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         
-//        try {
-//            socket = new Socket("localhost", 4444);
-//            out = new ObjectOutputStream(socket.getOutputStream());
-//            in = new ObjectInputStream(socket.getInputStream());
-//            System.out.println("Connected to server");
-//
-//        } catch (IOException e) {
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setTitle("ERROR");
-//            alert.setHeaderText("Se ha producido un error de conexión con el servidor.");
-//            alert.showAndWait();
-//            System.exit(1);
-//        }
+        try {
+            socket = new Socket("localhost", 4444);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+            System.out.println("Connected to server");
+
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Se ha producido un error de conexión con el servidor.");
+            alert.showAndWait();
+            System.exit(1);
+        }
         
         scene = new Scene(loadFXML("login"), 681, 468);
+        //scene = new Scene(loadFXML("principal"), 881, 551);
         stage.setTitle("QuickTap - Login");
         stage.setScene(scene);
         //stage.initStyle(StageStyle.UNDECORATED);

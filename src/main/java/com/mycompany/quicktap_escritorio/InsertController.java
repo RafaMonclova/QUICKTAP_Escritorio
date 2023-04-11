@@ -1,4 +1,4 @@
-package com.mycompany.proyecto_pruebainsert;
+package com.mycompany.quicktap_escritorio;
 
 import io.github.palexdev.materialfx.controls.MFXFilterComboBox;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;

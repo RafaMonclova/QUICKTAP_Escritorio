@@ -7,7 +7,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.proyecto_pruebainsert.InsertController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.InsertController">
    <children>
       <MFXTextField fx:id="nameField" floatingText="Nombre" layoutX="79.0" layoutY="68.0" prefHeight="50.0" prefWidth="301.0" />
       <MFXTextField fx:id="mailField" floatingText="Correo" layoutX="79.0" layoutY="136.0" prefHeight="50.0" prefWidth="301.0" />

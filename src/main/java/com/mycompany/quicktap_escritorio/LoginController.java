@@ -1,4 +1,4 @@
-package com.mycompany.proyecto_pruebainsert;
+package com.mycompany.quicktap_escritorio;
 
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
 import java.io.BufferedReader;
@@ -30,6 +30,7 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -49,6 +50,8 @@ public class LoginController implements Initializable {
     @FXML
     private TextField mailField;
 
+    private String nombreUsuario;
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
@@ -56,7 +59,6 @@ public class LoginController implements Initializable {
 
     @FXML
     public void login(ActionEvent e) {
-
         Task<Boolean> task = new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
@@ -68,7 +70,8 @@ public class LoginController implements Initializable {
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
-                    respuesta = (boolean)mensajeRespuesta.getData().get(0);
+                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
+                    nombreUsuario = (String) mensajeRespuesta.getData().get(1);
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -87,29 +90,49 @@ public class LoginController implements Initializable {
                 alert.setContentText("Sesión iniciada");
                 alert.showAndWait();
 
-                Parent root;
+                //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
                 try {
-
-                    root = App.loadFXML("insert");
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("principal.fxml"));
+                    Parent root1 = (Parent) fxmlLoader.load();
+                    PrincipalController controller = fxmlLoader.<PrincipalController>getController();
+                    controller.setUsuario(nombreUsuario);
                     Stage stage = new Stage();
                     stage.setTitle("QuickTap - Dashboard");
-                    //stage.initStyle(StageStyle.UNDECORATED);
-                    stage.setScene(new Scene(root, 640, 460));
+                    stage.setScene(new Scene(root1, 881, 545));
                     stage.show();
                     
                     //Oculta la ventana de Login
                     final Node source = (Node) e.getSource();
                     final Stage currentStage = (Stage) source.getScene().getWindow();
                     currentStage.close();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     ex.printStackTrace();
                 }
+
+//                Parent root;
+//                try {
+//
+//                    root = App.loadFXML("principal");
+//                    Stage stage = new Stage();
+//                    stage.setTitle("QuickTap - Dashboard");
+//                    //stage.initStyle(StageStyle.UNDECORATED);
+//                    stage.setScene(new Scene(root, 881, 551));
+//                    stage.show();
+//                    
+//                    
+//                    //Oculta la ventana de Login
+//                    final Node source = (Node) e.getSource();
+//                    final Stage currentStage = (Stage) source.getScene().getWindow();
+//                    currentStage.close();
+//                }
+//                catch (IOException ex) {
+//                    ex.printStackTrace();
+//                }
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Login");
                 alert.setHeaderText("ERROR");
-                alert.setContentText("Datos incorrectos");
+                alert.setContentText("No existe un usuario con los datos introducidos");
                 alert.showAndWait();
             }
 
