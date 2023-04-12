@@ -54,7 +54,7 @@ public class App extends Application {
         }
         
         scene = new Scene(loadFXML("login"), 681, 468);
-        //scene = new Scene(loadFXML("principal"), 881, 551);
+        //scene = new Scene(loadFXML("principal"), 914, 652);
         stage.setTitle("QuickTap - Login");
         stage.setScene(scene);
         //stage.initStyle(StageStyle.UNDECORATED);
