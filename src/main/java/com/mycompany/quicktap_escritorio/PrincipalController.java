@@ -6,7 +6,10 @@ package com.mycompany.quicktap_escritorio;
 
 import com.jfoenix.controls.JFXListView;
 import io.github.palexdev.materialfx.controls.MFXButton;
+import io.github.palexdev.materialfx.controls.MFXComboBox;
+import io.github.palexdev.materialfx.controls.MFXPasswordField;
 import io.github.palexdev.materialfx.controls.MFXTextField;
+import io.github.palexdev.materialfx.controls.legacy.MFXLegacyComboBox;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -98,6 +101,23 @@ public class PrincipalController implements Initializable {
 
     List<Place> places;
 
+    @FXML
+    private MFXPasswordField passwUsuario;
+
+    @FXML
+    private MFXTextField nombreUsuario;
+
+    @FXML
+    private MFXTextField correoUsuario;
+
+    @FXML
+    private AnchorPane panelAltaUsuario;
+
+    
+    @FXML
+    private ListView<String> listViewEstablecimientos;
+
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
@@ -117,6 +137,8 @@ public class PrincipalController implements Initializable {
 
             }
         });
+        
+
     }
 
     //Establece el nombre del usuario logeado
@@ -166,6 +188,7 @@ public class PrincipalController implements Initializable {
         labelVentanaActual.setText("Inicio");
         panelInicio.setVisible(true);
         panelAltaEstabl.setVisible(false);
+        panelAltaUsuario.setVisible(false);
     }
 
     @FXML
@@ -173,6 +196,42 @@ public class PrincipalController implements Initializable {
         labelVentanaActual.setText("Nuevo Establecimiento");
         panelAltaEstabl.setVisible(true);
         panelInicio.setVisible(false);
+        panelAltaUsuario.setVisible(false);
+
+    }
+
+    @FXML
+    private void panelAltaUsuario(ActionEvent e) {
+        labelVentanaActual.setText("Nuevo Usuario");
+        panelAltaUsuario.setVisible(true);
+        panelAltaEstabl.setVisible(false);
+        panelInicio.setVisible(false);
+        
+        //Carga los establecimientos disponibles
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                Message peticion = new Message("ESTABL_QUERY", new ArrayList<Object>());
+                ArrayList<String> listaEstabl = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    listaEstabl = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return listaEstabl;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> listaEstabl = task.getValue();
+            listViewEstablecimientos.getItems().addAll(listaEstabl);
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
 
     }
 
@@ -180,41 +239,57 @@ public class PrincipalController implements Initializable {
     @FXML
     public void buscarDireccion(ActionEvent e) {
 
-        if (nombreEstabl.getText().isEmpty()) {
-            listViewDirecciones.getItems().clear();
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Búsqueda");
-            alert.setHeaderText("Información");
-            alert.setContentText("Debe rellenar el campo 'nombre'");
-            alert.showAndWait();
-        } else {
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
 
-            try {
-                GooglePlaces client = new GooglePlaces("AIzaSyAaP6rsOVudwTFDitm7dKUbSJpTBabVyFU");
+                if (nombreEstabl.getText().isEmpty()) {
+                    listViewDirecciones.getItems().clear();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Búsqueda");
+                    alert.setHeaderText("Información");
+                    alert.setContentText("Debe rellenar el campo 'nombre'");
+                    alert.showAndWait();
+                } else {
 
-                places = client.getPlacesByQuery(nombreEstabl.getText(), GooglePlaces.MAXIMUM_RESULTS);
+                    try {
+                        GooglePlaces client = new GooglePlaces("AIzaSyAaP6rsOVudwTFDitm7dKUbSJpTBabVyFU");
 
-                ArrayList<String> direcciones = new ArrayList<String>();
+                        places = client.getPlacesByQuery(nombreEstabl.getText(), GooglePlaces.MAXIMUM_RESULTS);
 
-                for (Place place : places) {
+                    } catch (GooglePlacesException ex) {
 
-                    direcciones.add(place.getAddress());
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Búsqueda");
+                        alert.setHeaderText("Información");
+                        alert.setContentText("Sin resultados");
+                        alert.showAndWait();
+
+                    }
 
                 }
 
-                listViewDirecciones.getItems().clear();
-                listViewDirecciones.getItems().addAll(direcciones);
-            } catch (GooglePlacesException ex) {
+                return null;
+            }
+        };
 
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Búsqueda");
-                alert.setHeaderText("Información");
-                alert.setContentText("Sin resultados");
-                alert.showAndWait();
+        task.setOnSucceeded(event -> {
+
+            ArrayList<String> direcciones = new ArrayList<String>();
+
+            for (Place place : places) {
+
+                direcciones.add(place.getAddress());
 
             }
 
-        }
+            listViewDirecciones.getItems().clear();
+            listViewDirecciones.getItems().addAll(direcciones);
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
 
     }
 
@@ -227,7 +302,7 @@ public class PrincipalController implements Initializable {
             alert.setHeaderText("ERROR");
             alert.setContentText("Debe rellenar todos los campos");
             alert.showAndWait();
-            
+
         } else {
             Task<Boolean> task = new Task<Boolean>() {
                 @Override
@@ -260,6 +335,9 @@ public class PrincipalController implements Initializable {
                     alert.setHeaderText("Correcto");
                     alert.setContentText("Establecimiento dado de alta.");
                     alert.showAndWait();
+                    nombreEstabl.setText("");
+                    direccionEstabl.setText("");
+                    coordsEstabl.setText("");
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");
@@ -275,5 +353,78 @@ public class PrincipalController implements Initializable {
         }
 
     }
+
+    @FXML
+    public void añadirUsuario(ActionEvent e) {
+
+        //Comprueba que los campos no estén vacíos
+        if (nombreUsuario.getText().isEmpty() || correoUsuario.getText().isEmpty() || passwUsuario.getText().isEmpty() 
+                || listViewEstablecimientos.getSelectionModel().getSelectedItem() == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Información");
+            alert.setHeaderText("ERROR");
+            alert.setContentText("Debe rellenar todos los campos");
+            alert.showAndWait();
+
+        } else {
+            Task<Boolean> task = new Task<Boolean>() {
+                @Override
+                protected Boolean call() throws Exception {
+                    ArrayList<Object> data = new ArrayList<Object>();
+                    
+                    ArrayList<String> roles = new ArrayList<String>();
+                    ArrayList<String> establecimientos = new ArrayList<String>();
+                    roles.add("propietario"); //Rol propietario, ya que damos de alta solo propietarios desde esta cuenta
+                    establecimientos.add(listViewEstablecimientos.getSelectionModel().getSelectedItem());
+                    
+                    data.add(nombreUsuario.getText());
+                    data.add(correoUsuario.getText());
+                    data.add(passwUsuario.getText());
+                    data.add(roles);
+                    data.add(establecimientos);
+                    
+                    Message peticion = new Message("INSERT_USER", data);
+                    boolean respuesta = false;
+                    try {
+                        App.out.writeObject(peticion);
+                        Message mensajeRespuesta = (Message) App.in.readObject();
+                        respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                    } catch (IOException ex) {
+                        Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    return respuesta;
+                }
+            };
+
+            task.setOnSucceeded(event -> {
+                boolean respuesta = task.getValue();
+
+                if (respuesta) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Información");
+                    alert.setHeaderText("Correcto");
+                    alert.setContentText("Usuario dado de alta.");
+                    alert.showAndWait();
+                    nombreUsuario.setText("");
+                    correoUsuario.setText("");
+                    passwUsuario.setText("");
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Información");
+                    alert.setHeaderText("ERROR");
+                    alert.setContentText("El correo introducido ya existe");
+                    alert.showAndWait();
+                }
+
+            });
+
+            Thread thread = new Thread(task);
+            thread.start();
+        }
+
+    }
+    
+    
 
 }

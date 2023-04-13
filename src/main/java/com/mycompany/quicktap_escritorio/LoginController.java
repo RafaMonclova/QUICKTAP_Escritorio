@@ -98,7 +98,7 @@ public class LoginController implements Initializable {
                     controller.setUsuario(nombreUsuario);
                     Stage stage = new Stage();
                     stage.setTitle("QuickTap - Dashboard");
-                    stage.setScene(new Scene(root1, 881, 545));
+                    stage.setScene(new Scene(root1, 914, 652));
                     stage.show();
                     
                     //Oculta la ventana de Login
