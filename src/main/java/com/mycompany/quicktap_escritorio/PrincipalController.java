@@ -227,6 +227,7 @@ public class PrincipalController implements Initializable {
 
         task.setOnSucceeded(event -> {
             ArrayList<String> listaEstabl = task.getValue();
+            listViewEstablecimientos.getItems().clear();
             listViewEstablecimientos.getItems().addAll(listaEstabl);
         });
 
