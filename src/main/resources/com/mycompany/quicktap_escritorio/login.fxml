@@ -3,21 +3,25 @@
 <?import io.github.palexdev.materialfx.controls.MFXButton?>
 <?import io.github.palexdev.materialfx.controls.MFXPasswordField?>
 <?import io.github.palexdev.materialfx.controls.MFXTextField?>
+<?import io.github.palexdev.materialfx.dialogs.MFXGenericDialog?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.effect.ColorAdjust?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="468.0" prefWidth="681.0" style="-fx-background-color: #FFE6C7;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.LoginController">
    <children>
-      <Label layoutX="300.0" layoutY="75.0" text="Email" AnchorPane.leftAnchor="300.0" AnchorPane.rightAnchor="238.39999999999998">
+      <Label layoutX="300.0" layoutY="39.0" text="Email" AnchorPane.leftAnchor="300.0" AnchorPane.rightAnchor="238.39999999999998">
          <font>
             <Font name="System Bold" size="18.0" />
          </font></Label>
-      <Label layoutX="300.0" layoutY="234.0" prefHeight="35.0" prefWidth="149.0" text="Contraseña" AnchorPane.leftAnchor="300.0" AnchorPane.rightAnchor="151.0">
+      <Label layoutX="300.0" layoutY="198.0" prefHeight="35.0" prefWidth="149.0" text="Contraseña" AnchorPane.leftAnchor="300.0" AnchorPane.rightAnchor="151.0">
          <font>
             <Font name="System Bold" size="18.0" />
          </font></Label>
@@ -30,12 +34,12 @@
             </ImageView>
          </children>
       </VBox>
-      <MFXButton buttonType="RAISED" layoutX="378.0" layoutY="378.0" onAction="#login" prefHeight="46.0" prefWidth="108.0" rippleColor="#ff6000" text="Iniciar sesión" AnchorPane.leftAnchor="378.0" AnchorPane.rightAnchor="114.0">
+      <MFXButton buttonType="RAISED" layoutX="378.0" layoutY="343.0" onAction="#login" prefHeight="46.0" prefWidth="108.0" rippleColor="#ff6000" text="Iniciar sesión" AnchorPane.leftAnchor="378.0" AnchorPane.rightAnchor="114.0">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
       </MFXButton>
-      <MFXPasswordField fx:id="passwordField" floatMode="DISABLED" layoutX="300.0" layoutY="281.0" prefHeight="49.0" prefWidth="344.0">
+      <MFXPasswordField fx:id="passwordField" floatMode="DISABLED" layoutX="300.0" layoutY="245.0" prefHeight="49.0" prefWidth="344.0">
          <font>
             <Font size="18.0" />
          </font>
@@ -43,7 +47,7 @@
             <ColorAdjust hue="0.56" />
          </effect>
       </MFXPasswordField>
-      <MFXTextField fx:id="mailField" floatMode="DISABLED" layoutX="300.0" layoutY="112.0" prefHeight="49.0" prefWidth="344.0" promptText="ejemplo@ejemplo.es">
+      <MFXTextField fx:id="mailField" floatMode="DISABLED" layoutX="300.0" layoutY="76.0" prefHeight="49.0" prefWidth="344.0" promptText="ejemplo@ejemplo.es">
          <font>
             <Font size="18.0" />
          </font>
@@ -51,5 +55,26 @@
             <ColorAdjust hue="0.56" />
          </effect>
       </MFXTextField>
+      <MFXGenericDialog fx:id="dialogPane" headerText="Seleccione un rol para logear" layoutX="103.0" layoutY="69.0" onClose="#cerrarVentana" prefHeight="351.0" prefWidth="549.0" showAlwaysOnTop="false" showClose="false" showMinimize="false" visible="false">
+         <center>
+            <ListView fx:id="listViewRoles" prefHeight="372.0" prefWidth="528.0" BorderPane.alignment="CENTER" />
+         </center>
+         <bottom>
+            <HBox prefHeight="46.0" prefWidth="528.0" style="-fx-spacing: 20; -fx-alignment: center; -fx-padding: 10;" BorderPane.alignment="CENTER">
+               <children>
+                  <MFXButton fx:id="btnContinuar" buttonType="RAISED" onAction="#elegirRol" prefHeight="40.0" prefWidth="143.0" rippleColor="#ff6000" text="Seleccionar">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton buttonType="RAISED" layoutX="203.0" layoutY="20.0" onAction="#cerrarVentana" prefHeight="40.0" prefWidth="143.0" rippleColor="#ff6000" text="Cancelar">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </MFXButton>
+               </children>
+            </HBox>
+         </bottom>
+      </MFXGenericDialog>
    </children>
 </AnchorPane>

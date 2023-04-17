@@ -15,6 +15,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
@@ -26,7 +27,11 @@ import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -36,6 +41,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import message.Message;
 import netscape.javascript.JSObject;
@@ -128,6 +134,24 @@ public class AdminController implements Initializable {
     
     @FXML
     private MFXTextField correoUsuarioInfo;
+    
+    @FXML
+    private AnchorPane panelEditarRoles;
+    
+    @FXML
+    private ListView<String> rolesUsuarioInfo;
+    
+    @FXML
+    private ListView<String> rolesDisponibles;
+    
+    @FXML
+    private AnchorPane panelEditarEstabl;
+
+    @FXML
+    private ListView<String> establDisponibles;
+
+    @FXML
+    private ListView<String> establUsuarioInfo;
 
 
     @Override
@@ -201,6 +225,7 @@ public class AdminController implements Initializable {
         panelInicio.setVisible(true);
         panelAltaEstabl.setVisible(false);
         panelAltaUsuario.setVisible(false);
+        panelInfoUsuario.setVisible(false);
     }
 
     @FXML
@@ -209,6 +234,7 @@ public class AdminController implements Initializable {
         panelAltaEstabl.setVisible(true);
         panelInicio.setVisible(false);
         panelAltaUsuario.setVisible(false);
+        panelInfoUsuario.setVisible(false);
 
     }
 
@@ -218,6 +244,7 @@ public class AdminController implements Initializable {
         panelAltaUsuario.setVisible(true);
         panelAltaEstabl.setVisible(false);
         panelInicio.setVisible(false);
+        panelInfoUsuario.setVisible(false);
         
         //Carga los establecimientos disponibles
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -257,15 +284,30 @@ public class AdminController implements Initializable {
         panelInicio.setVisible(false);
         
         //Carga la información del usuario
-        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+        Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
             @Override
-            protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("USER_QUERY", new ArrayList<Object>());
-                ArrayList<String> datosUsuario = new ArrayList<String>();
+            protected ArrayList<Object> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                data.add(btnLabelUsuario.getText());
+                Message peticion = new Message("USER_DATA_QUERY", data);
+                ArrayList<Object> datosUsuario = new ArrayList<Object>();
+                ArrayList<String> rolesUsuario = new ArrayList<String>();
+                ArrayList<String> establUsuario = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
-                    datosUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+                    
+                    datosUsuario.add((String) mensajeRespuesta.getData().get(0));
+                    datosUsuario.add((String) mensajeRespuesta.getData().get(1));
+                    datosUsuario.add((String) mensajeRespuesta.getData().get(2));
+                    rolesUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(3);
+                    datosUsuario.add(rolesUsuario);
+                    
+                    if(rolesUsuario.contains("trabajador") || rolesUsuario.contains("propietario")){
+                        establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
+                        datosUsuario.add(establUsuario);
+                    }
+                    
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -275,10 +317,14 @@ public class AdminController implements Initializable {
         };
 
         task.setOnSucceeded(event -> {
-            ArrayList<String> datosUsuario = task.getValue();
-            nombreUsuarioInfo.setText(datosUsuario.get(0));
-            correoUsuarioInfo.setText(datosUsuario.get(1));
-            passwUsuarioInfo.setText(datosUsuario.get(2));
+            ArrayList<Object> datosUsuario = task.getValue();
+            nombreUsuarioInfo.setText((String) datosUsuario.get(0));
+            correoUsuarioInfo.setText((String) datosUsuario.get(1));
+            passwUsuarioInfo.setText((String) datosUsuario.get(2));
+            rolesUsuarioInfo.getItems().clear();
+            rolesUsuarioInfo.getItems().addAll((ArrayList<String>)datosUsuario.get(3));
+            establUsuarioInfo.getItems().clear();
+            establUsuarioInfo.getItems().addAll((ArrayList<String>)datosUsuario.get(4));
         });
 
         Thread thread = new Thread(task);
@@ -286,7 +332,158 @@ public class AdminController implements Initializable {
 
     }
     
-    //Modifica los datos del usuario en la base de datos
+    @FXML
+    public void editarRoles(ActionEvent e){
+        
+        if(panelEditarRoles.isVisible()){
+            panelEditarRoles.setVisible(false);
+        }
+        else{
+            panelEditarRoles.setVisible(true);
+        }
+        
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                Message peticion = new Message("ROLE_QUERY", new ArrayList<Object>());
+                ArrayList<String> listaRoles = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    listaRoles = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return listaRoles;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> listaRoles = task.getValue();
+            rolesDisponibles.getItems().clear();
+            rolesDisponibles.getItems().addAll(listaRoles);
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+        
+    }
+    
+    @FXML
+    public void editarEstablecimientos(ActionEvent e){
+        
+        if(panelEditarEstabl.isVisible()){
+            panelEditarEstabl.setVisible(false);
+        }
+        else{
+            panelEditarEstabl.setVisible(true);
+        }
+        
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                Message peticion = new Message("ESTABL_QUERY", new ArrayList<Object>());
+                ArrayList<String> listaEstabl = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    listaEstabl = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return listaEstabl;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> listaEstabl = task.getValue();
+            establDisponibles.getItems().clear();
+            establDisponibles.getItems().addAll(listaEstabl);
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+        
+    }
+    
+    @FXML
+    public void cerrarEditarRoles(ActionEvent e){
+        panelEditarRoles.setVisible(false);
+    }
+    
+    @FXML
+    public void cerrarEditarEstabl(ActionEvent e){
+        panelEditarEstabl.setVisible(false);
+    }
+
+    @FXML    
+    public void añadirRol(ActionEvent e){
+        
+        if(rolesUsuarioInfo.getItems().contains(rolesDisponibles.getSelectionModel().getSelectedItem())){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Error al añadir rol");
+            alert.setContentText("El usuario ya tiene el rol seleccionado.");
+            alert.showAndWait();
+        }
+        else{
+            rolesUsuarioInfo.getItems().add(rolesDisponibles.getSelectionModel().getSelectedItem());
+        }
+        
+    }
+    
+    @FXML    
+    public void quitarRol(ActionEvent e){
+        
+        if(rolesUsuarioInfo.getItems().size() == 1){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Error al quitar rol");
+            alert.setContentText("El usuario debe tener al menos un rol.");
+            alert.showAndWait();
+        }
+        else{
+            rolesUsuarioInfo.getItems().remove(rolesUsuarioInfo.getSelectionModel().getSelectedItem());
+        }
+        
+    }
+    
+    @FXML    
+    public void añadirEstabl(ActionEvent e){
+        
+        if(establUsuarioInfo.getItems().contains(establDisponibles.getSelectionModel().getSelectedItem())){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Error al añadir establecimiento");
+            alert.setContentText("El usuario ya tiene el establecimiento seleccionado.");
+            alert.showAndWait();
+        }
+        else{
+            establUsuarioInfo.getItems().add(establDisponibles.getSelectionModel().getSelectedItem());
+        }
+        
+    }
+    
+    @FXML    
+    public void quitarEstabl(ActionEvent e){
+        
+        if(establUsuarioInfo.getItems().size() == 1){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Error al quitar establecimiento");
+            alert.setContentText("El usuario debe tener al menos un establecimiento.");
+            alert.showAndWait();
+        }
+        else{
+            establUsuarioInfo.getItems().remove(establUsuarioInfo.getSelectionModel().getSelectedItem());
+        }
+        
+    }
+    
+    //Modifica los datos del usuario en la base de datos. 
+    //En este caso, se envían al servidor los roles y los establecimientos, ya que no tocamos datos de clientes (sin establecimiento vinculado)
     @FXML
     private void actualizarDatosUsuario(ActionEvent e) {
         
@@ -296,9 +493,17 @@ public class AdminController implements Initializable {
             protected Boolean call() throws Exception {
                 
                 ArrayList<Object> nuevosDatos = new ArrayList<Object>();
+                nuevosDatos.add(btnLabelUsuario.getText());
                 nuevosDatos.add(nombreUsuarioInfo.getText());
                 nuevosDatos.add(correoUsuarioInfo.getText());
                 nuevosDatos.add(passwUsuarioInfo.getText());
+                
+                ArrayList<String> listaRoles = new ArrayList<String>(rolesUsuarioInfo.getItems());
+                nuevosDatos.add(listaRoles);
+                
+                ArrayList<String> listaEstabl = new ArrayList<String>(establUsuarioInfo.getItems());
+                nuevosDatos.add(listaEstabl);
+                
                 Message peticion = new Message("USER_UPDATE", nuevosDatos);
                 boolean respuesta = false;
                 try {
@@ -398,7 +603,7 @@ public class AdminController implements Initializable {
     }
 
     @FXML
-    public void añadirEstabl(ActionEvent e) {
+    public void añadirNuevoEstabl(ActionEvent e) {
 
         if (nombreEstabl.getText().isEmpty() || direccionEstabl.getText().isEmpty() || coordsEstabl.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -533,30 +738,61 @@ public class AdminController implements Initializable {
     @FXML
     public void logout(ActionEvent e){
         
-        Task<Void> task = new Task<Void>() {
+        Task<Boolean> task = new Task<Boolean>() {
             @Override
-            protected Void call() throws Exception {
+            protected Boolean call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
-                data.add(nombreUsuario);
+                data.add(btnLabelUsuario.getText());
                 
                 Message peticion = new Message("LOG_OUT", data );
-                
+                boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
                     
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                return null;
+                return respuesta;
             }
         };
         task.setOnSucceeded(event -> {
             
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Información");
-            alert.setHeaderText("Sesión cerrada");
-            alert.setContentText("Se ha desconectado del sistema");
-            alert.showAndWait();
+            boolean respuesta = task.getValue();
+            
+            if(respuesta){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Información");
+                alert.setHeaderText("Sesión cerrada");
+                alert.setContentText("Se ha desconectado del sistema");
+                alert.showAndWait();
+                
+                //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
+                try {
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("login.fxml"));
+                    Parent root1 = (Parent) fxmlLoader.load();
+                    Stage stage = new Stage();
+                    stage.setTitle("QuickTap - Login");
+                    stage.setScene(new Scene(root1, 681, 468));
+                    stage.show();
+                    
+                    //Oculta la ventana de Login
+                    final Node source = (Node) e.getSource();
+                    final Stage currentStage = (Stage) source.getScene().getWindow();
+                    currentStage.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            else{
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("ERROR");
+                alert.setHeaderText("Error al desconectar");
+                alert.setContentText("Ha habido un problema al cerrar la sesión");
+                alert.showAndWait();
+            }
+            
             try {
                 App.setRoot("login");
             } catch (IOException ex) {

@@ -1,6 +1,9 @@
 package com.mycompany.quicktap_escritorio;
 
+import io.github.palexdev.materialfx.controls.MFXButton;
+import io.github.palexdev.materialfx.controls.MFXComboBox;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
+import io.github.palexdev.materialfx.dialogs.MFXGenericDialog;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -37,6 +40,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -50,8 +54,19 @@ public class LoginController implements Initializable {
     @FXML
     private TextField mailField;
 
+    @FXML
+    private ListView<String> listViewRoles;
+
+    @FXML
+    private MFXGenericDialog dialogPane;
+
+    @FXML
+    private MFXButton btnContinuar;
+
     private String nombreUsuario;
-    
+
+    private ArrayList<String> listaRoles = new ArrayList<>();
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
@@ -66,12 +81,18 @@ public class LoginController implements Initializable {
                 data.add(mailField.getText());
                 data.add(passwordField.getText());
                 Message peticion = new Message("LOGIN", data);
+
                 boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
+
                     respuesta = (boolean) mensajeRespuesta.getData().get(0);
-                    nombreUsuario = (String) mensajeRespuesta.getData().get(1);
+
+                    if (respuesta) {
+                        nombreUsuario = (String) mensajeRespuesta.getData().get(1);
+                        listaRoles = (ArrayList<String>) mensajeRespuesta.getData().get(2);
+                    }
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -84,30 +105,8 @@ public class LoginController implements Initializable {
             boolean respuesta = task.getValue();
 
             if (respuesta) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Login");
-                alert.setHeaderText("Bienvenido");
-                alert.setContentText("Sesión iniciada");
-                alert.showAndWait();
-
-                //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
-                try {
-                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("admin.fxml"));
-                    Parent root1 = (Parent) fxmlLoader.load();
-                    AdminController controller = fxmlLoader.<AdminController>getController();
-                    controller.setUsuario(nombreUsuario);
-                    Stage stage = new Stage();
-                    stage.setTitle("QuickTap - Dashboard");
-                    stage.setScene(new Scene(root1, 914, 652));
-                    stage.show();
-                    
-                    //Oculta la ventana de Login
-                    final Node source = (Node) e.getSource();
-                    final Stage currentStage = (Stage) source.getScene().getWindow();
-                    currentStage.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+                dialogPane.setVisible(true);
+                listViewRoles.getItems().addAll(listaRoles);
 
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -123,5 +122,46 @@ public class LoginController implements Initializable {
         thread.start();
 
     }
+
+    @FXML
+    public void elegirRol(ActionEvent e) {
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Login");
+        alert.setHeaderText("Bienvenido, "+nombreUsuario);
+        alert.setContentText("Sesión iniciada");
+        alert.showAndWait();
+
+        //CAMBIARLO POR ADMIN
+        if (listViewRoles.getSelectionModel().getSelectedItem().equals("trabajador")) {
+            //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
+            try {
+                FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("admin.fxml"));
+                Parent root1 = (Parent) fxmlLoader.load();
+                AdminController controller = fxmlLoader.<AdminController>getController();
+                controller.setUsuario(nombreUsuario);
+                
+                Stage stage = new Stage();
+                stage.setTitle("QuickTap - Dashboard");
+                stage.setScene(new Scene(root1, 914, 652));
+                stage.show();
+
+                //Oculta la ventana de Login
+                final Node source = (Node) e.getSource();
+                final Stage currentStage = (Stage) source.getScene().getWindow();
+                currentStage.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+    }
+    
+    @FXML
+    public void cerrarVentana(ActionEvent e){
+        dialogPane.setVisible(false);
+    }
+
+    
 
 }
