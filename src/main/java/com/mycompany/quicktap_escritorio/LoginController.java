@@ -92,9 +92,9 @@ public class LoginController implements Initializable {
 
                 //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
                 try {
-                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("principal.fxml"));
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("admin.fxml"));
                     Parent root1 = (Parent) fxmlLoader.load();
-                    PrincipalController controller = fxmlLoader.<PrincipalController>getController();
+                    AdminController controller = fxmlLoader.<AdminController>getController();
                     controller.setUsuario(nombreUsuario);
                     Stage stage = new Stage();
                     stage.setTitle("QuickTap - Dashboard");
@@ -109,25 +109,6 @@ public class LoginController implements Initializable {
                     ex.printStackTrace();
                 }
 
-//                Parent root;
-//                try {
-//
-//                    root = App.loadFXML("principal");
-//                    Stage stage = new Stage();
-//                    stage.setTitle("QuickTap - Dashboard");
-//                    //stage.initStyle(StageStyle.UNDECORATED);
-//                    stage.setScene(new Scene(root, 881, 551));
-//                    stage.show();
-//                    
-//                    
-//                    //Oculta la ventana de Login
-//                    final Node source = (Node) e.getSource();
-//                    final Stage currentStage = (Stage) source.getScene().getWindow();
-//                    currentStage.close();
-//                }
-//                catch (IOException ex) {
-//                    ex.printStackTrace();
-//                }
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Login");
