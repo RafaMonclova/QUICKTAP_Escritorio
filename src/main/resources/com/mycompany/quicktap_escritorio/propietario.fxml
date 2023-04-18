@@ -19,7 +19,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane id="AnchorPane" prefHeight="652.0" prefWidth="914.0" style="-fx-background-color: #e1e1ea;" stylesheets="@../../../estilo.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.AdminController">
+<AnchorPane id="AnchorPane" prefHeight="652.0" prefWidth="914.0" style="-fx-background-color: #e1e1ea;" stylesheets="@../../../estilo.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.PropietarioController">
    <children>
       <AnchorPane fx:id="panelAltaEstabl" layoutX="101.0" layoutY="95.0" prefHeight="546.0" prefWidth="800.0" visible="false">
          <children>
@@ -161,37 +161,32 @@
                   </DropShadow>
                </effect>
                <children>
-                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="237.0" text="Nuevos clientes" wrapText="true">
+                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="237.0" text="Caja de hoy" wrapText="true">
                      <font>
                         <Font size="24.0" />
                      </font>
                   </Label>
                   <ImageView fitHeight="70.0" fitWidth="74.0" layoutX="11.0" layoutY="12.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@../../../icons8_bad_idea_70px.png" />
+                        <Image url="@../../../icons8_Sales_Balance_70px.png" />
                      </image>
                   </ImageView>
-                  <Label fx:id="db_nuevosClientes" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_cajaHoy" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
                   </Label>
                   <Separator layoutX="8.0" layoutY="114.0" prefHeight="6.0" prefWidth="330.0" />
-                  <Label alignment="CENTER" layoutX="72.0" layoutY="162.0" prefHeight="27.0" prefWidth="158.0" text="Última alta:" textFill="#898989">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="db_ultimoCliente" alignment="CENTER" layoutX="198.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="Fecha" textFill="#898989">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </Label>
                   <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="27.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../../../icons8_brake_warning_70px.png" />
                      </image>
                   </ImageView>
+                  <MFXButton buttonType="RAISED" layoutX="95.0" layoutY="157.0" prefHeight="38.0" prefWidth="207.0" text="Ver establecimientos" textFill="#898989">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
                </children>
             </AnchorPane>
             <AnchorPane prefHeight="200.0" prefWidth="244.0" style="-fx-background-color: white; -fx-background-radius: 3;" GridPane.columnIndex="1">
@@ -203,37 +198,32 @@
                   </DropShadow>
                </effect>
                <children>
-                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="238.0" text="Usuarios conectados" wrapText="true">
+                  <Label alignment="CENTER" layoutX="84.0" layoutY="8.0" prefHeight="78.0" prefWidth="270.0" text="Trabajadores conectados" textAlignment="CENTER" wrapText="true">
                      <font>
                         <Font size="24.0" />
                      </font>
                   </Label>
                   <ImageView fitHeight="70.0" fitWidth="74.0" layoutX="11.0" layoutY="12.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@../../../icons8_server_70px.png" />
+                        <Image url="@../../../icons8_waiter_70px.png" />
                      </image>
                   </ImageView>
-                  <Label fx:id="db_clientesConectados" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_trabajadoresOn" alignment="CENTER" layoutX="87.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
                   </Label>
                   <Separator layoutX="8.0" layoutY="114.0" prefHeight="5.0" prefWidth="330.0" />
-                  <Label alignment="CENTER" layoutX="71.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="IP Servidor:" textFill="#898989">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="db_ipServidor" alignment="CENTER" layoutX="197.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="192.168.1.1" textFill="#898989">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </Label>
-                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="26.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="62.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@../../../icons8_wi-fi_70px.png" />
+                        <Image url="@../../../icons8_list_70px.png" />
                      </image>
                   </ImageView>
+                  <MFXButton buttonType="RAISED" layoutX="108.0" layoutY="157.0" prefHeight="38.0" prefWidth="158.0" text="Ver listado" textFill="#898989">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
                </children>
             </AnchorPane>
             <AnchorPane prefHeight="200.0" prefWidth="244.0" style="-fx-background-color: white; -fx-background-radius: 3;" GridPane.rowIndex="1">
@@ -245,7 +235,7 @@
                   </DropShadow>
                </effect>
                <children>
-                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="237.0" text="Total clientes" wrapText="true">
+                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="237.0" text="Total trabajadores" wrapText="true">
                      <font>
                         <Font size="24.0" />
                      </font>
@@ -255,7 +245,7 @@
                         <Image url="@../../../icons8_people_70px.png" />
                      </image>
                   </ImageView>
-                  <Label fx:id="db_totalClientes" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_totalTrabajadores" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
@@ -287,32 +277,52 @@
                   </DropShadow>
                </effect>
                <children>
-                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="237.0" text="Registro de errores" wrapText="true">
+                  <Label alignment="CENTER" layoutX="95.0" layoutY="14.0" prefHeight="56.0" prefWidth="237.0" text="Total pedidos" wrapText="true">
                      <font>
                         <Font size="24.0" />
                      </font>
                   </Label>
                   <ImageView fitHeight="70.0" fitWidth="74.0" layoutX="11.0" layoutY="12.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@../../../icons8_error_70px.png" />
+                        <Image url="@../../../icons8_restaurant_70px_1.png" />
                      </image>
                   </ImageView>
-                  <Label fx:id="db_errores" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_totalPedidos" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
                   </Label>
                   <Separator layoutX="8.0" layoutY="114.0" prefHeight="6.0" prefWidth="330.0" />
-                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="62.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="46.0" layoutY="139.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@../../../icons8_log_70px.png" />
+                        <Image url="@../../../icons8_checked_checkbox_70px.png" />
                      </image>
                   </ImageView>
-                  <MFXButton buttonType="RAISED" layoutX="114.0" layoutY="157.0" prefHeight="38.0" prefWidth="158.0" text="Ver registro" textFill="#898989">
+                  <Label alignment="CENTER" layoutX="65.0" layoutY="144.0" prefHeight="27.0" prefWidth="158.0" text="Finalizados:" textFill="#898989">
                      <font>
                         <Font size="18.0" />
                      </font>
-                  </MFXButton>
+                  </Label>
+                  <Label alignment="CENTER" layoutX="65.0" layoutY="195.0" prefHeight="27.0" prefWidth="158.0" text="Pendientes:" textFill="#898989">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="db_pedidosFin" alignment="CENTER" layoutX="198.0" layoutY="144.0" prefHeight="27.0" prefWidth="126.0" text="fin" textFill="#898989">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="db_pedidosPen" alignment="CENTER" layoutX="198.0" layoutY="195.0" prefHeight="27.0" prefWidth="126.0" text="pen" textFill="#898989">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Label>
+                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="46.0" layoutY="190.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../icons8_sand_timer_70px.png" />
+                     </image>
+                  </ImageView>
                </children>
             </AnchorPane>
          </children>

@@ -92,6 +92,7 @@ public class LoginController implements Initializable {
                     if (respuesta) {
                         nombreUsuario = (String) mensajeRespuesta.getData().get(1);
                         listaRoles = (ArrayList<String>) mensajeRespuesta.getData().get(2);
+
                     }
 
                 } catch (IOException ex) {
@@ -105,8 +106,12 @@ public class LoginController implements Initializable {
             boolean respuesta = task.getValue();
 
             if (respuesta) {
-                dialogPane.setVisible(true);
-                listViewRoles.getItems().addAll(listaRoles);
+//                dialogPane.setVisible(true);
+//                listViewRoles.getItems().clear();
+//                listViewRoles.getItems().addAll(listaRoles);
+                
+                
+                cargarApp(e);
 
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -123,24 +128,23 @@ public class LoginController implements Initializable {
 
     }
 
-    @FXML
-    public void elegirRol(ActionEvent e) {
+    public void cargarApp(ActionEvent e) {
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Login");
-        alert.setHeaderText("Bienvenido, "+nombreUsuario);
-        alert.setContentText("Sesión iniciada");
-        alert.showAndWait();
+        if (listaRoles.contains("administrador")) {
 
-        //CAMBIARLO POR ADMIN
-        if (listViewRoles.getSelectionModel().getSelectedItem().equals("trabajador")) {
-            //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
             try {
+                
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Login");
+                alert.setHeaderText("Bienvenido, " + nombreUsuario+" [Administrador]");
+                alert.setContentText("Sesión iniciada");
+                alert.showAndWait();
+                
                 FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("admin.fxml"));
                 Parent root1 = (Parent) fxmlLoader.load();
                 AdminController controller = fxmlLoader.<AdminController>getController();
                 controller.setUsuario(nombreUsuario);
-                
+
                 Stage stage = new Stage();
                 stage.setTitle("QuickTap - Dashboard");
                 stage.setScene(new Scene(root1, 914, 652));
@@ -153,15 +157,102 @@ public class LoginController implements Initializable {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+
+        } else if (listaRoles.contains("propietario")) {
+
+            try {
+                System.out.println("aaa");
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Login");
+                alert.setHeaderText("Bienvenido, " + nombreUsuario+" [Propietario]");
+                alert.setContentText("Sesión iniciada");
+                alert.showAndWait();
+                
+                FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("propietario.fxml"));
+                Parent root1 = (Parent) fxmlLoader.load();
+                PropietarioController controller = fxmlLoader.<PropietarioController>getController();
+                controller.setUsuario(nombreUsuario);
+
+                Stage stage = new Stage();
+                stage.setTitle("QuickTap - Dashboard");
+                stage.setScene(new Scene(root1, 914, 652));
+                stage.show();
+
+                //Oculta la ventana de Login
+                final Node source = (Node) e.getSource();
+                final Stage currentStage = (Stage) source.getScene().getWindow();
+                currentStage.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
+        }
+        
+        else{
+            
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Login");
+            alert.setHeaderText("ERROR");
+            alert.setContentText("El usuario no tiene permisos para iniciar sesión");
+            alert.showAndWait();
+            
         }
 
     }
-    
+
+//    @FXML
+//    public void elegirRol(ActionEvent e) {
+//
+//        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//        alert.setTitle("Login");
+//        alert.setHeaderText("Bienvenido, " + nombreUsuario);
+//        alert.setContentText("Sesión iniciada");
+//        alert.showAndWait();
+//
+//        //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
+//        try {
+//            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("admin.fxml"));
+//            Parent root1 = (Parent) fxmlLoader.load();
+//            AdminController controller = fxmlLoader.<AdminController>getController();
+//            controller.setUsuario(nombreUsuario);
+//
+//            Stage stage = new Stage();
+//            stage.setTitle("QuickTap - Dashboard");
+//            stage.setScene(new Scene(root1, 914, 652));
+//            stage.show();
+//
+//            //Oculta la ventana de Login
+//            final Node source = (Node) e.getSource();
+//            final Stage currentStage = (Stage) source.getScene().getWindow();
+//            currentStage.close();
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//
+//        //Crea un stage de la ventana principal, enviando el nombre del usuario que logea
+//        try {
+//            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("propietario.fxml"));
+//            Parent root1 = (Parent) fxmlLoader.load();
+//            PropietarioController controller = fxmlLoader.<PropietarioController>getController();
+//            controller.setUsuario(nombreUsuario);
+//
+//            Stage stage = new Stage();
+//            stage.setTitle("QuickTap - Dashboard");
+//            stage.setScene(new Scene(root1, 914, 652));
+//            stage.show();
+//
+//            //Oculta la ventana de Login
+//            final Node source = (Node) e.getSource();
+//            final Stage currentStage = (Stage) source.getScene().getWindow();
+//            currentStage.close();
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//
+//    }
     @FXML
-    public void cerrarVentana(ActionEvent e){
+    public void cerrarVentana(ActionEvent e) {
         dialogPane.setVisible(false);
     }
-
-    
 
 }

@@ -57,7 +57,7 @@ import se.walkercrou.places.exception.NoResultsFoundException;
  *
  * @author rafam
  */
-public class AdminController implements Initializable {
+public class PropietarioController implements Initializable {
 
     @FXML
     private ImageView burger;
@@ -155,25 +155,28 @@ public class AdminController implements Initializable {
     private ListView<String> establUsuarioInfo;
 
     @FXML
-    private Label db_clientesConectados;
-
-    @FXML
-    private Label db_errores;
-
-    @FXML
-    private Label db_nuevosClientes;
-
-    @FXML
-    private Label db_totalClientes;
+    private Label db_cajaHoy;
 
     @FXML
     private Label db_fechaRecarga;
 
     @FXML
-    private Label db_ultimoCliente;
+    private Label db_numPagos;
 
     @FXML
-    private Label db_ipServidor;
+    private Label db_pedidosFin;
+
+    @FXML
+    private Label db_pedidosPen;
+
+    @FXML
+    private Label db_totalPedidos;
+
+    @FXML
+    private Label db_totalTrabajadores;
+
+    @FXML
+    private Label db_trabajadoresOn;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -258,7 +261,9 @@ public class AdminController implements Initializable {
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
             @Override
             protected ArrayList<Object> call() throws Exception {
-                Message peticion = new Message("SERVER_DATA_QUERY", new ArrayList<Object>());
+                ArrayList<Object> data = new ArrayList<Object>();
+                data.add(btnLabelUsuario.getText());
+                Message peticion = new Message("ESTABL_DATA_QUERY", data);
                 ArrayList<Object> listaDatos = new ArrayList<Object>();
                 try {
                     App.out.writeObject(peticion);
@@ -279,16 +284,16 @@ public class AdminController implements Initializable {
             ArrayList<Object> listaDatos = task.getValue();
 
             //Establece los datos obtenidos del servidor en los paneles
-            db_nuevosClientes.setText((int)listaDatos.get(0)+"");
-            db_ultimoCliente.setText((String)listaDatos.get(1));
+            db_cajaHoy.setText((double)listaDatos.get(0)+"");
             
-            db_clientesConectados.setText((int)listaDatos.get(2)+"");
-            db_ipServidor.setText((String)listaDatos.get(3));
+            db_trabajadoresOn.setText((int)listaDatos.get(1)+"");
             
-            db_totalClientes.setText((long)listaDatos.get(4)+"");
-            db_fechaRecarga.setText((String)listaDatos.get(5));
+            db_totalTrabajadores.setText((long)listaDatos.get(2)+"");
+            db_fechaRecarga.setText((String)listaDatos.get(3));
             
-            db_errores.setText((int)listaDatos.get(6)+"");
+            db_totalPedidos.setText((long)listaDatos.get(4)+"");
+            db_pedidosFin.setText((long)listaDatos.get(5)+"");
+            db_pedidosPen.setText((long)listaDatos.get(6)+"");
         });
 
         Thread thread = new Thread(task);
@@ -856,7 +861,7 @@ public class AdminController implements Initializable {
             try {
                 App.setRoot("login");
             } catch (IOException ex) {
-                Logger.getLogger(AdminController.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PropietarioController.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         });
