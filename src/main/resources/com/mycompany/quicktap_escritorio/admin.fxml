@@ -171,7 +171,7 @@
                         <Image url="@../../../icons8_bad_idea_70px.png" />
                      </image>
                   </ImageView>
-                  <Label alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_nuevosClientes" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
@@ -182,7 +182,7 @@
                         <Font size="18.0" />
                      </font>
                   </Label>
-                  <Label alignment="CENTER" layoutX="198.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="Fecha" textFill="#898989">
+                  <Label fx:id="db_fechaUltimoAlta" alignment="CENTER" layoutX="198.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="Fecha" textFill="#898989">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -213,7 +213,7 @@
                         <Image url="@../../../icons8_server_70px.png" />
                      </image>
                   </ImageView>
-                  <Label alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_clientesConectados" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
@@ -224,7 +224,7 @@
                         <Font size="18.0" />
                      </font>
                   </Label>
-                  <Label alignment="CENTER" layoutX="197.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="192.168.1.1" textFill="#898989">
+                  <Label fx:id="db_ipServidor" alignment="CENTER" layoutX="197.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="192.168.1.1" textFill="#898989">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -255,7 +255,7 @@
                         <Image url="@../../../icons8_people_70px.png" />
                      </image>
                   </ImageView>
-                  <Label alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_totalClientes" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
@@ -266,7 +266,7 @@
                         <Font size="18.0" />
                      </font>
                   </Label>
-                  <Label alignment="CENTER" layoutX="198.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="Fecha" textFill="#898989">
+                  <Label fx:id="db_fechaRecarga" alignment="CENTER" layoutX="198.0" layoutY="162.0" prefHeight="27.0" prefWidth="126.0" text="Fecha" textFill="#898989">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -297,7 +297,7 @@
                         <Image url="@../../../icons8_error_70px.png" />
                      </image>
                   </ImageView>
-                  <Label alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
+                  <Label fx:id="db_errores" alignment="CENTER" layoutX="93.0" layoutY="72.0" prefHeight="27.0" prefWidth="238.0" text="0">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>

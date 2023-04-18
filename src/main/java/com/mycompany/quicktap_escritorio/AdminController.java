@@ -152,6 +152,27 @@ public class AdminController implements Initializable {
 
     @FXML
     private ListView<String> establUsuarioInfo;
+    
+    @FXML
+    private Label db_clientesConectados;
+
+    @FXML
+    private Label db_errores;
+
+    @FXML
+    private Label db_nuevosClientes;
+
+    @FXML
+    private Label db_totalClientes;
+    
+    @FXML
+    private Label db_fechaRecarga;
+
+    @FXML
+    private Label db_fechaUltimoAlta;
+
+    @FXML
+    private Label db_ipServidor;
 
 
     @Override
@@ -226,6 +247,43 @@ public class AdminController implements Initializable {
         panelAltaEstabl.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        
+        
+        
+        //Obtiene del servidor los datos a mostrar en el panel de inicio
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                Message peticion = new Message("SERVER_DATA_QUERY", new ArrayList<Object>());
+                ArrayList<String> listaDatos = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    listaDatos = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return listaDatos;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> listaDatos = task.getValue();
+            
+            //Establece los datos obtenidos del servidor en los paneles
+            db_nuevosClientes.setText(listaDatos.get(0));
+            db_fechaUltimoAlta.setText(listaDatos.get(1));
+            db_clientesConectados.setText(listaDatos.get(2));
+            db_ipServidor.setText(listaDatos.get(3));
+            db_totalClientes.setText(listaDatos.get(4));
+            db_fechaRecarga.setText(listaDatos.get(5));
+            db_errores.setText(listaDatos.get(6));
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+        
     }
 
     @FXML
