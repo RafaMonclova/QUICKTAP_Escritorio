@@ -22,8 +22,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
@@ -37,6 +40,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -44,6 +51,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import message.Message;
 import netscape.javascript.JSObject;
@@ -67,6 +75,9 @@ public class AdminController implements Initializable {
 
     @FXML
     private MFXButton btnAñadirEstabl;
+
+    @FXML
+    private MFXButton btnModificarProp;
 
     @FXML
     private MFXButton btnAñadirPropietario;
@@ -122,6 +133,9 @@ public class AdminController implements Initializable {
     private AnchorPane panelAltaUsuario;
 
     @FXML
+    private AnchorPane panelModificarProp;
+
+    @FXML
     private ListView<String> listViewEstablecimientos;
 
     @FXML
@@ -137,16 +151,13 @@ public class AdminController implements Initializable {
     private MFXTextField correoUsuarioInfo;
 
     @FXML
-    private AnchorPane panelEditarRoles;
+    private AnchorPane panelEditarRolesEstabl;
 
     @FXML
     private ListView<String> rolesUsuarioInfo;
 
     @FXML
     private ListView<String> rolesDisponibles;
-
-    @FXML
-    private AnchorPane panelEditarEstabl;
 
     @FXML
     private ListView<String> establDisponibles;
@@ -175,6 +186,22 @@ public class AdminController implements Initializable {
     @FXML
     private Label db_ipServidor;
 
+    @FXML
+    private TableView tablaPropietarios;
+
+    private ArrayList<ArrayList<Object>> propietarios;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columCorreo;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columNombre;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columPassw;
+    
+    private String usuarioCargado;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
@@ -194,8 +221,29 @@ public class AdminController implements Initializable {
 
             }
         });
-        
+
         actualizarDashboard();
+
+        // Agrega un evento al hacer clic en una fila
+        tablaPropietarios.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.getClickCount() == 1) { // Si se hizo un solo clic
+                    // Obtiene la fila seleccionada
+                    ArrayList<Object> filaSeleccionada = (ArrayList<Object>) tablaPropietarios.getSelectionModel().getSelectedItem();
+                    if (filaSeleccionada != null) {
+                        System.out.println(filaSeleccionada.get(0));
+                        System.out.println(filaSeleccionada.get(1));
+                        System.out.println(filaSeleccionada.get(2));
+
+                        //Carga los roles y establecimientos para ser editados
+                        usuarioCargado = (String) filaSeleccionada.get(0);
+                        cargarRolesEstabl(usuarioCargado);
+
+                    }
+                }
+            }
+        });
 
     }
 
@@ -231,12 +279,14 @@ public class AdminController implements Initializable {
             btnAñadirEstabl.setDisable(true);
             btnAñadirPropietario.setDisable(true);
             btnHome.setDisable(true);
+            btnModificarProp.setDisable(true);
         } else {
             btnSalir.setDisable(false);
             btnInfoUsuario.setDisable(false);
             btnAñadirEstabl.setDisable(false);
             btnAñadirPropietario.setDisable(false);
             btnHome.setDisable(false);
+            btnModificarProp.setDisable(false);
         }
 
     }
@@ -248,7 +298,8 @@ public class AdminController implements Initializable {
         panelAltaEstabl.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
-        
+        panelModificarProp.setVisible(false);
+
         actualizarDashboard();
 
     }
@@ -263,10 +314,8 @@ public class AdminController implements Initializable {
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
-                    
+
                     listaDatos = mensajeRespuesta.getData();
-                    
-                    
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -279,16 +328,16 @@ public class AdminController implements Initializable {
             ArrayList<Object> listaDatos = task.getValue();
 
             //Establece los datos obtenidos del servidor en los paneles
-            db_nuevosClientes.setText((int)listaDatos.get(0)+"");
-            db_ultimoCliente.setText((String)listaDatos.get(1));
-            
-            db_clientesConectados.setText((int)listaDatos.get(2)+"");
-            db_ipServidor.setText((String)listaDatos.get(3));
-            
-            db_totalClientes.setText((long)listaDatos.get(4)+"");
-            db_fechaRecarga.setText((String)listaDatos.get(5));
-            
-            db_errores.setText((int)listaDatos.get(6)+"");
+            db_nuevosClientes.setText((int) listaDatos.get(0) + "");
+            db_ultimoCliente.setText((String) listaDatos.get(1));
+
+            db_clientesConectados.setText((int) listaDatos.get(2) + "");
+            db_ipServidor.setText((String) listaDatos.get(3));
+
+            db_totalClientes.setText((long) listaDatos.get(4) + "");
+            db_fechaRecarga.setText((String) listaDatos.get(5));
+
+            db_errores.setText((int) listaDatos.get(6) + "");
         });
 
         Thread thread = new Thread(task);
@@ -302,6 +351,7 @@ public class AdminController implements Initializable {
         panelInicio.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        panelModificarProp.setVisible(false);
 
     }
 
@@ -312,6 +362,7 @@ public class AdminController implements Initializable {
         panelAltaEstabl.setVisible(false);
         panelInicio.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        panelModificarProp.setVisible(false);
 
         //Carga los establecimientos disponibles
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -343,12 +394,99 @@ public class AdminController implements Initializable {
     }
 
     @FXML
+    private void panelModificarProp(ActionEvent e) {
+        labelVentanaActual.setText("Listado de propietarios");
+        panelModificarProp.setVisible(true);
+        panelAltaEstabl.setVisible(false);
+        panelInicio.setVisible(false);
+        panelAltaUsuario.setVisible(false);
+        panelInfoUsuario.setVisible(false);
+
+        //Carga los usuarios obtenidos del servidor
+        Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
+            @Override
+            protected ArrayList<ArrayList<Object>> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                Message peticion = new Message("PROP_QUERY", data);
+                ArrayList<ArrayList<Object>> usuarios = new ArrayList<>();
+
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    ArrayList<Object> datosRecibidos = (ArrayList<Object>) mensajeRespuesta.getData();
+
+                    for (Object listado : datosRecibidos) {
+                        usuarios.add((ArrayList<Object>) listado);
+                    }
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                return usuarios;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<ArrayList<Object>> usuarios = task.getValue();
+
+            /*
+            for(Object o : usuarios){
+                
+                ArrayList<Object> datosUsuario = (ArrayList<Object>) o;
+                
+                
+                    
+                System.out.println(datosUsuario.get(0));
+                System.out.println(datosUsuario.get(1)); 
+                System.out.println(datosUsuario.get(2));
+                
+                
+            }
+             */
+            // Agregar las columnas a la tabla
+            //TableColumn<List<Object>, Object> columnaNombre = new TableColumn<>("Columna 1");
+            columNombre.setCellValueFactory(new Callback<CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(0));
+                }
+            });
+
+            //          tablaPropietarios.getColumns().add(columNombre);
+            //TableColumn<List<Object>, Object> columnaCorreo = new TableColumn<>("Columna 2");
+            columCorreo.setCellValueFactory(new Callback<CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(1));
+                }
+            });
+//            tablaPropietarios.getColumns().add(columCorreo);
+
+            //TableColumn<List<Object>, Object> columnaPassw = new TableColumn<>("Contraseña");
+            columPassw.setCellValueFactory(new Callback<CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(2));
+                }
+            });
+
+            // Asignar las filas a la tabla
+            tablaPropietarios.setItems(FXCollections.observableArrayList(usuarios));
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
+    @FXML
     private void panelInfoUsuario(ActionEvent e) {
         labelVentanaActual.setText("Perfil de Usuario");
         panelInfoUsuario.setVisible(true);
         panelAltaUsuario.setVisible(false);
         panelAltaEstabl.setVisible(false);
         panelInicio.setVisible(false);
+        panelModificarProp.setVisible(false);
 
         //Carga la información del usuario
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
@@ -387,10 +525,10 @@ public class AdminController implements Initializable {
             nombreUsuarioInfo.setText((String) datosUsuario.get(0));
             correoUsuarioInfo.setText((String) datosUsuario.get(1));
             passwUsuarioInfo.setText((String) datosUsuario.get(2));
-            rolesUsuarioInfo.getItems().clear();
-            rolesUsuarioInfo.getItems().addAll((ArrayList<String>) datosUsuario.get(3));
-            establUsuarioInfo.getItems().clear();
-            establUsuarioInfo.getItems().addAll((ArrayList<String>) datosUsuario.get(4));
+//            rolesUsuarioInfo.getItems().clear();
+//            rolesUsuarioInfo.getItems().addAll((ArrayList<String>) datosUsuario.get(3));
+//            establUsuarioInfo.getItems().clear();
+//            establUsuarioInfo.getItems().addAll((ArrayList<String>) datosUsuario.get(4));
         });
 
         Thread thread = new Thread(task);
@@ -398,73 +536,55 @@ public class AdminController implements Initializable {
 
     }
 
-    @FXML
-    public void editarRoles(ActionEvent e) {
+    public void cargarRolesEstabl(String usuario) {
 
-        if (panelEditarRoles.isVisible()) {
-            panelEditarRoles.setVisible(false);
-        } else {
-            panelEditarRoles.setVisible(true);
-        }
+        panelEditarRolesEstabl.setVisible(true);
 
-        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+        Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
             @Override
-            protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ROLE_QUERY", new ArrayList<Object>());
-                ArrayList<String> listaRoles = new ArrayList<String>();
+            protected ArrayList<Object> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<>();
+                data.add(usuario);
+
+                Message peticion = new Message("EDIT_ROLE_ESTABL_QUERY", data);
+
+                ArrayList<Object> datosRolesEstablecimientos = new ArrayList<>();
+
+                ArrayList<String> listaRolesDisponibles = new ArrayList<String>();
+                ArrayList<String> listaRolesUsuario = new ArrayList<String>();
+                ArrayList<String> listaEstablDisponibles = new ArrayList<String>();
+                ArrayList<String> listaEstablUsuario = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
-                    listaRoles = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+                    listaRolesDisponibles = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+                    listaRolesUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(1);
+                    listaEstablDisponibles = (ArrayList<String>) mensajeRespuesta.getData().get(2);
+                    listaEstablUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(3);
+
+                    datosRolesEstablecimientos.add(listaRolesDisponibles);
+                    datosRolesEstablecimientos.add(listaRolesUsuario);
+                    datosRolesEstablecimientos.add(listaEstablDisponibles);
+                    datosRolesEstablecimientos.add(listaEstablUsuario);
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                return listaRoles;
+                return datosRolesEstablecimientos;
             }
         };
 
         task.setOnSucceeded(event -> {
-            ArrayList<String> listaRoles = task.getValue();
+            ArrayList<Object> datosRolesEstablecimientos = task.getValue();
             rolesDisponibles.getItems().clear();
-            rolesDisponibles.getItems().addAll(listaRoles);
-        });
-
-        Thread thread = new Thread(task);
-        thread.start();
-
-    }
-
-    @FXML
-    public void editarEstablecimientos(ActionEvent e) {
-
-        if (panelEditarEstabl.isVisible()) {
-            panelEditarEstabl.setVisible(false);
-        } else {
-            panelEditarEstabl.setVisible(true);
-        }
-
-        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
-            @Override
-            protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ESTABL_QUERY", new ArrayList<Object>());
-                ArrayList<String> listaEstabl = new ArrayList<String>();
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-                    listaEstabl = (ArrayList<String>) mensajeRespuesta.getData().get(0);
-
-                } catch (IOException ex) {
-                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return listaEstabl;
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            ArrayList<String> listaEstabl = task.getValue();
+            rolesUsuarioInfo.getItems().clear();
             establDisponibles.getItems().clear();
-            establDisponibles.getItems().addAll(listaEstabl);
+            establUsuarioInfo.getItems().clear();
+
+            establDisponibles.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(0));
+            rolesDisponibles.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(1));
+            establUsuarioInfo.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(2));
+            rolesUsuarioInfo.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(3));
         });
 
         Thread thread = new Thread(task);
@@ -474,12 +594,58 @@ public class AdminController implements Initializable {
 
     @FXML
     public void cerrarEditarRoles(ActionEvent e) {
-        panelEditarRoles.setVisible(false);
-    }
+        panelEditarRolesEstabl.setVisible(false);
+        
+        Task<Boolean> task = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                ArrayList<Object> data = new ArrayList<>();
+                data.add(usuarioCargado);
+                
+                ArrayList<String> listaRolesUsuario = new ArrayList<String>(rolesUsuarioInfo.getItems());
+                ArrayList<String> listaEstablUsuario = new ArrayList<String>(establUsuarioInfo.getItems());
+                data.add(listaRolesUsuario);
+                data.add(listaEstablUsuario);
+                
+                Message peticion = new Message("ROLE_ESTABL_UPDATE", data);
 
-    @FXML
-    public void cerrarEditarEstabl(ActionEvent e) {
-        panelEditarEstabl.setVisible(false);
+                boolean respuesta = false;
+
+
+                
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    
+                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return respuesta;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            boolean respuesta = task.getValue();
+            
+            if (respuesta) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Información");
+                alert.setHeaderText("Correcto");
+                alert.setContentText("Datos actualizados.");
+                alert.showAndWait();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("ERROR");
+                alert.setHeaderText("Error al modificar los datos");
+                alert.setContentText("Revise los datos introducidos.");
+                alert.showAndWait();
+            }
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
     }
 
     @FXML
@@ -558,12 +724,11 @@ public class AdminController implements Initializable {
                 nuevosDatos.add(correoUsuarioInfo.getText());
                 nuevosDatos.add(passwUsuarioInfo.getText());
 
-                ArrayList<String> listaRoles = new ArrayList<String>(rolesUsuarioInfo.getItems());
-                nuevosDatos.add(listaRoles);
-
-                ArrayList<String> listaEstabl = new ArrayList<String>(establUsuarioInfo.getItems());
-                nuevosDatos.add(listaEstabl);
-
+//                ArrayList<String> listaRoles = new ArrayList<String>(rolesUsuarioInfo.getItems());
+//                nuevosDatos.add(listaRoles);
+//
+//                ArrayList<String> listaEstabl = new ArrayList<String>(establUsuarioInfo.getItems());
+//                nuevosDatos.add(listaEstabl);
                 Message peticion = new Message("USER_UPDATE", nuevosDatos);
                 boolean respuesta = false;
                 try {
@@ -741,7 +906,7 @@ public class AdminController implements Initializable {
 
                     ArrayList<String> roles = new ArrayList<String>();
                     ArrayList<String> establecimientos = new ArrayList<String>();
-                    
+
                     //Añade rol propietario y trabajador al nuevo propietario
                     roles.add("propietario"); //Rol propietario
                     roles.add("trabajador"); //Rol trabajador

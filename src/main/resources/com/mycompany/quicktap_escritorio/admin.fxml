@@ -6,6 +6,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.effect.ColorAdjust?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.Image?>
@@ -92,6 +94,15 @@
                         </ImageView>
                      </graphic>
                   </MFXButton>
+                  <MFXButton fx:id="btnModificarProp" ellipsisString="" layoutX="20.0" layoutY="184.0" onAction="#panelModificarProp" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                     <graphic>
+                        <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../icons8_find_user_male_70px.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </MFXButton>
                   <Label prefHeight="174.0" prefWidth="74.0" />
                   <MFXButton fx:id="btnInfoUsuario" ellipsisString="" layoutX="20.0" layoutY="184.0" onAction="#panelInfoUsuario" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
                      <graphic>
@@ -142,7 +153,7 @@
             </ImageView>
          </children>
       </AnchorPane>
-      <GridPane fx:id="panelInicio" hgap="20.0" layoutX="141.0" layoutY="99.0" prefHeight="530.0" prefWidth="719.0" vgap="20.0" AnchorPane.bottomAnchor="22.600000000000023" AnchorPane.leftAnchor="141.0" AnchorPane.rightAnchor="53.799999999999955" AnchorPane.topAnchor="99.0">
+      <GridPane fx:id="panelInicio" hgap="20.0" layoutX="141.0" layoutY="99.0" prefHeight="530.0" prefWidth="719.0" vgap="20.0" visible="false" AnchorPane.bottomAnchor="22.600000000000023" AnchorPane.leftAnchor="141.0" AnchorPane.rightAnchor="53.799999999999955" AnchorPane.topAnchor="99.0">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -336,7 +347,12 @@
                         <Font size="14.0" />
                      </font>
                   </MFXButton>
-                  <Label prefHeight="160.0" prefWidth="186.0" />
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="20.0" layoutY="179.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Editar propietarios" textFill="WHITE">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </MFXButton>
+                  <Label prefHeight="72.0" prefWidth="186.0" />
                   <MFXButton fx:id="btnLabelUsuario" alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="143.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Mi perfil" textFill="WHITE">
                      <font>
                         <Font size="18.0" />
@@ -432,25 +448,26 @@
                   <Font name="System Bold" size="18.0" />
                </font>
             </Label>
-            <MFXButton layoutX="614.0" layoutY="65.0" onAction="#editarRoles" prefHeight="98.0" prefWidth="171.0" text="Editar roles">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </MFXButton>
-            <MFXButton layoutX="614.0" layoutY="224.0" onAction="#editarEstablecimientos" prefHeight="98.0" prefWidth="171.0" text="Editar establecimientos" wrapText="true">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </MFXButton>
-            <AnchorPane fx:id="panelEditarRoles" layoutX="93.0" layoutY="66.0" prefHeight="414.0" prefWidth="575.0" style="-fx-background-color: #e1e1ea; -fx-border-color: black;" visible="false">
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="panelModificarProp" layoutX="131.0" layoutY="105.0" prefHeight="546.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.6000000000000227" AnchorPane.leftAnchor="131.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="105.0">
+         <children>
+            <TableView fx:id="tablaPropietarios" layoutX="50.0" layoutY="46.0" prefHeight="434.0" prefWidth="655.0" AnchorPane.bottomAnchor="66.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="84.79999999999995" AnchorPane.topAnchor="46.0">
+              <columns>
+                <TableColumn fx:id="columNombre" prefWidth="189.5999755859375" text="Nombre" />
+                <TableColumn fx:id="columCorreo" prefWidth="247.99996948242188" text="Correo" />
+                  <TableColumn fx:id="columPassw" prefWidth="218.39996337890625" text="Contraseña" />
+              </columns>
+            </TableView>
+            <AnchorPane fx:id="panelEditarRolesEstabl" layoutX="93.0" layoutY="66.0" prefHeight="414.0" prefWidth="575.0" style="-fx-background-color: #e1e1ea; -fx-border-color: black;" visible="false">
                <children>
-                  <ListView fx:id="rolesDisponibles" layoutX="22.0" layoutY="82.0" prefHeight="256.0" prefWidth="224.0" />
-                  <MFXButton layoutX="22.0" layoutY="339.0" onAction="#añadirRol" text="Añadir">
+                  <ListView fx:id="rolesDisponibles" layoutX="22.0" layoutY="40.0" prefHeight="88.0" prefWidth="224.0" />
+                  <MFXButton layoutX="22.0" layoutY="128.0" onAction="#añadirRol" text="Añadir">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </MFXButton>
-                  <MFXButton layoutX="312.0" layoutY="338.0" onAction="#quitarRol" text="Quitar">
+                  <MFXButton layoutX="312.0" layoutY="128.0" onAction="#quitarRol" text="Quitar">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -460,44 +477,35 @@
                         <Font size="14.0" />
                      </font>
                   </MFXButton>
-                  <ListView fx:id="rolesUsuarioInfo" layoutX="312.0" layoutY="79.0" prefHeight="256.0" prefWidth="224.0" />
-                  <Label layoutX="80.0" layoutY="52.0" text="Roles disponibles">
+                  <ListView fx:id="rolesUsuarioInfo" layoutX="312.0" layoutY="40.0" prefHeight="88.0" prefWidth="224.0" />
+                  <Label layoutX="80.0" layoutY="20.0" text="Roles disponibles">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <Label layoutX="398.0" layoutY="52.0" text="Actuales">
+                  <Label layoutX="398.0" layoutY="20.0" text="Actuales">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Label>
-               </children>
-            </AnchorPane>
-            <AnchorPane fx:id="panelEditarEstabl" layoutX="103.0" layoutY="76.0" prefHeight="414.0" prefWidth="575.0" style="-fx-background-color: #e1e1ea; -fx-border-color: black;" visible="false">
-               <children>
-                  <ListView fx:id="establDisponibles" layoutX="22.0" layoutY="82.0" prefHeight="256.0" prefWidth="224.0" />
-                  <MFXButton layoutX="22.0" layoutY="339.0" onAction="#añadirEstabl" text="Añadir">
+                  <ListView fx:id="establDisponibles" layoutX="22.0" layoutY="203.0" prefHeight="164.0" prefWidth="224.0" />
+                  <MFXButton layoutX="30.0" layoutY="368.0" onAction="#añadirEstabl" text="Añadir">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </MFXButton>
-                  <MFXButton layoutX="312.0" layoutY="338.0" onAction="#quitarEstabl" text="Quitar">
+                  <MFXButton layoutX="312.0" layoutY="368.0" onAction="#quitarEstabl" text="Quitar">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </MFXButton>
-                  <MFXButton layoutX="486.0" layoutY="368.0" onAction="#cerrarEditarEstabl" prefHeight="30.0" prefWidth="74.0" text="Finalizar">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </MFXButton>
-                  <ListView fx:id="establUsuarioInfo" layoutX="312.0" layoutY="79.0" prefHeight="256.0" prefWidth="224.0" />
-                  <Label layoutX="47.0" layoutY="52.0" text="Establecimientosdisponibles">
+                  <ListView fx:id="establUsuarioInfo" layoutX="312.0" layoutY="203.0" prefHeight="164.0" prefWidth="224.0" />
+                  <Label layoutX="45.0" layoutY="181.0" text="Establecimientos disponibles">
                      <font>
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <Label layoutX="398.0" layoutY="52.0" text="Actuales">
+                  <Label layoutX="398.0" layoutY="181.0" text="Actuales">
                      <font>
                         <Font size="14.0" />
                      </font>
