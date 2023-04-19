@@ -7,6 +7,7 @@ package com.mycompany.quicktap_escritorio;
 import com.jfoenix.controls.JFXListView;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXComboBox;
+import io.github.palexdev.materialfx.controls.MFXFilterComboBox;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
 import io.github.palexdev.materialfx.controls.MFXTextField;
 import io.github.palexdev.materialfx.controls.legacy.MFXLegacyComboBox;
@@ -66,7 +67,10 @@ public class PropietarioController implements Initializable {
     private AnchorPane panelMenu;
 
     @FXML
-    private MFXButton btnAñadirEstabl;
+    private MFXButton btnAltaCategoria;
+    
+    @FXML
+    private MFXButton btnAñadirProducto;
 
     @FXML
     private MFXButton btnAñadirPropietario;
@@ -90,7 +94,10 @@ public class PropietarioController implements Initializable {
     private Label labelVentanaActual;
 
     @FXML
-    private AnchorPane panelAltaEstabl;
+    private AnchorPane panelAltaProducto;
+    
+    @FXML
+    private AnchorPane panelAltaCategoria;
 
     @FXML
     private GridPane panelInicio;
@@ -153,6 +160,33 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private ListView<String> establUsuarioInfo;
+    
+    @FXML
+    private ListView<String> listViewEstablCategoria;
+    
+    @FXML
+    private MFXTextField nombreCategoria;
+    
+    @FXML
+    private MFXTextField descripcionCategoria;
+    
+    @FXML
+    private MFXTextField nombreProducto;
+    
+    @FXML
+    private MFXTextField descripcionProducto;
+    
+    @FXML
+    private MFXTextField precioProducto;
+    
+    @FXML
+    private MFXTextField stockProducto;
+    
+    @FXML
+    private ImageView imagenProducto;
+    
+    @FXML
+    private ListView<String> listViewCategorias;
 
     @FXML
     private Label db_cajaHoy;
@@ -177,26 +211,14 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private Label db_trabajadoresOn;
+    
+    @FXML
+    private MFXFilterComboBox<String> comboSeleccionarEstabl;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
         btnMenu.setOnMouseClicked(event -> togglePanelLateral(panelMenu));
-        listViewDirecciones.setOnMouseClicked(new EventHandler<MouseEvent>() {
-
-            @Override
-            public void handle(MouseEvent event) {
-                try {
-                    int indice = listViewDirecciones.getSelectionModel().getSelectedIndex();
-                    Place p = places.get(indice);
-                    direccionEstabl.setText(p.getAddress());
-                    coordsEstabl.setText(p.getLatitude() + "," + p.getLongitude());
-                } catch (NullPointerException | IndexOutOfBoundsException ex) {
-
-                }
-
-            }
-        });
         
         actualizarDashboard();
 
@@ -231,13 +253,13 @@ public class PropietarioController implements Initializable {
         if (activado) {
             btnSalir.setDisable(true);
             btnInfoUsuario.setDisable(true);
-            btnAñadirEstabl.setDisable(true);
+            btnAñadirProducto.setDisable(true);
             btnAñadirPropietario.setDisable(true);
             btnHome.setDisable(true);
         } else {
             btnSalir.setDisable(false);
             btnInfoUsuario.setDisable(false);
-            btnAñadirEstabl.setDisable(false);
+            btnAñadirProducto.setDisable(false);
             btnAñadirPropietario.setDisable(false);
             btnHome.setDisable(false);
         }
@@ -248,9 +270,10 @@ public class PropietarioController implements Initializable {
     private void panelInicio(ActionEvent e) {
         labelVentanaActual.setText("Inicio");
         panelInicio.setVisible(true);
-        panelAltaEstabl.setVisible(false);
+        panelAltaProducto.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        panelAltaCategoria.setVisible(false);
         
         actualizarDashboard();
 
@@ -301,12 +324,138 @@ public class PropietarioController implements Initializable {
     }
 
     @FXML
-    private void panelAltaEstabl(ActionEvent e) {
-        labelVentanaActual.setText("Nuevo Establecimiento");
-        panelAltaEstabl.setVisible(true);
+    private void panelAltaProducto(ActionEvent e) {
+        labelVentanaActual.setText("Nuevo producto");
+        panelAltaProducto.setVisible(true);
         panelInicio.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        panelAltaCategoria.setVisible(false);
+        
+        //Carga los establecimientos del usuario, para obtener las categorías de cada uno
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                data.add(btnLabelUsuario.getText());
+                Message peticion = new Message("USER_DATA_QUERY", data);
+                
+                
+                ArrayList<String> establUsuario = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    
+                    establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
+                    
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return establUsuario;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> establUsuario = task.getValue();
+            
+            comboSeleccionarEstabl.getItems().clear();
+            comboSeleccionarEstabl.getItems().addAll(establUsuario);
+            comboSeleccionarEstabl.setValue(establUsuario.get(0));
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+    
+    @FXML
+    public void rellenarCategorias(ActionEvent e){
+        
+        //Envía el establecimiento al servidor y recibe sus categorías asociadas
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                
+                data.add(comboSeleccionarEstabl.getValue());
+                Message peticion = new Message("ESTABL_CATEGORY_QUERY", data);
+                
+                
+                ArrayList<String> categoriasEstabl = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    for(Object o : mensajeRespuesta.getData()){
+                        categoriasEstabl.add((String) o);
+                    }
+                    
+                    
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return categoriasEstabl;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> categoriasEstabl = task.getValue();
+            
+            listViewCategorias.getItems().clear();
+            listViewCategorias.getItems().addAll(categoriasEstabl);
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+        
+    }
+    
+    @FXML
+    private void panelAltaCategoria(ActionEvent e) {
+        labelVentanaActual.setText("Nueva categoría");
+        panelAltaCategoria.setVisible(true);
+        panelAltaProducto.setVisible(false);
+        panelInicio.setVisible(false);
+        panelAltaUsuario.setVisible(false);
+        panelInfoUsuario.setVisible(false);
+        
+        //Carga la información del usuario (en este caso, sus establecimientos)
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                data.add(btnLabelUsuario.getText());
+                Message peticion = new Message("USER_DATA_QUERY", data);
+                
+                
+                ArrayList<String> establUsuario = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+    
+                    establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
+                    
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return establUsuario;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> establUsuario = task.getValue();
+            
+            listViewEstablCategoria.getItems().clear();
+            listViewEstablCategoria.getItems().addAll(establUsuario);
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
 
     }
 
@@ -314,9 +463,10 @@ public class PropietarioController implements Initializable {
     private void panelAltaUsuario(ActionEvent e) {
         labelVentanaActual.setText("Nuevo Usuario");
         panelAltaUsuario.setVisible(true);
-        panelAltaEstabl.setVisible(false);
+        panelAltaProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        panelAltaCategoria.setVisible(false);
 
         //Carga los establecimientos disponibles
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -352,8 +502,9 @@ public class PropietarioController implements Initializable {
         labelVentanaActual.setText("Perfil de Usuario");
         panelInfoUsuario.setVisible(true);
         panelAltaUsuario.setVisible(false);
-        panelAltaEstabl.setVisible(false);
+        panelAltaProducto.setVisible(false);
         panelInicio.setVisible(false);
+        panelAltaCategoria.setVisible(false);
 
         //Carga la información del usuario
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
@@ -563,11 +714,6 @@ public class PropietarioController implements Initializable {
                 nuevosDatos.add(correoUsuarioInfo.getText());
                 nuevosDatos.add(passwUsuarioInfo.getText());
 
-                ArrayList<String> listaRoles = new ArrayList<String>(rolesUsuarioInfo.getItems());
-                nuevosDatos.add(listaRoles);
-
-                ArrayList<String> listaEstabl = new ArrayList<String>(establUsuarioInfo.getItems());
-                nuevosDatos.add(listaEstabl);
 
                 Message peticion = new Message("USER_UPDATE", nuevosDatos);
                 boolean respuesta = false;
@@ -666,9 +812,9 @@ public class PropietarioController implements Initializable {
     }
 
     @FXML
-    public void añadirNuevoEstabl(ActionEvent e) {
+    public void añadirNuevaCategoria(ActionEvent e) {
 
-        if (nombreEstabl.getText().isEmpty() || direccionEstabl.getText().isEmpty() || coordsEstabl.getText().isEmpty()) {
+        if (nombreCategoria.getText().isEmpty() || descripcionCategoria.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Información");
             alert.setHeaderText("ERROR");
@@ -681,10 +827,11 @@ public class PropietarioController implements Initializable {
                 protected Boolean call() throws Exception {
                     ArrayList<Object> data = new ArrayList<Object>();
 
-                    data.add(nombreEstabl.getText());
-                    data.add(direccionEstabl.getText());
-                    data.add(coordsEstabl.getText());
-                    Message peticion = new Message("INSERT_ESTABL", data);
+                    data.add(nombreCategoria.getText());
+                    data.add(descripcionCategoria.getText());
+                    data.add(listViewEstablCategoria.getSelectionModel().getSelectedItem());
+                    
+                    Message peticion = new Message("INSERT_CATEGORY", data);
                     boolean respuesta = false;
                     try {
                         App.out.writeObject(peticion);
@@ -705,16 +852,81 @@ public class PropietarioController implements Initializable {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Información");
                     alert.setHeaderText("Correcto");
-                    alert.setContentText("Establecimiento dado de alta.");
+                    alert.setContentText("Categoría dada de alta.");
                     alert.showAndWait();
-                    nombreEstabl.setText("");
-                    direccionEstabl.setText("");
-                    coordsEstabl.setText("");
+                    nombreCategoria.setText("");
+                    descripcionCategoria.setText("");
+                    
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");
                     alert.setHeaderText("ERROR");
-                    alert.setContentText("El correo introducido ya existe");
+                    alert.setContentText("La categoría ya existe");
+                    alert.showAndWait();
+                }
+
+            });
+
+            Thread thread = new Thread(task);
+            thread.start();
+        }
+
+    }
+    
+    @FXML
+    public void añadirNuevoProducto(ActionEvent e) {
+
+        if (nombreProducto.getText().isEmpty() || descripcionProducto.getText().isEmpty() || precioProducto.getText().isEmpty()
+                || stockProducto.getText().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Información");
+            alert.setHeaderText("ERROR");
+            alert.setContentText("Debe rellenar todos los campos");
+            alert.showAndWait();
+
+        } else {
+            Task<Boolean> task = new Task<Boolean>() {
+                @Override
+                protected Boolean call() throws Exception {
+                    ArrayList<Object> data = new ArrayList<Object>();
+
+                    data.add(nombreProducto.getText());
+                    data.add(descripcionProducto.getText());
+                    data.add(precioProducto.getText());
+                    data.add(stockProducto.getText());
+                    data.add(listViewCategorias.getSelectionModel().getSelectedItem());
+                    
+                    Message peticion = new Message("INSERT_PRODUCT", data);
+                    boolean respuesta = false;
+                    try {
+                        App.out.writeObject(peticion);
+                        Message mensajeRespuesta = (Message) App.in.readObject();
+                        respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                    } catch (IOException ex) {
+                        Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    return respuesta;
+                }
+            };
+
+            task.setOnSucceeded(event -> {
+                boolean respuesta = task.getValue();
+
+                if (respuesta) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Información");
+                    alert.setHeaderText("Correcto");
+                    alert.setContentText("Producto dado de alta.");
+                    alert.showAndWait();
+                    nombreCategoria.setText("");
+                    descripcionCategoria.setText("");
+                    
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Información");
+                    alert.setHeaderText("ERROR");
+                    alert.setContentText("El producto ya existe");
                     alert.showAndWait();
                 }
 
