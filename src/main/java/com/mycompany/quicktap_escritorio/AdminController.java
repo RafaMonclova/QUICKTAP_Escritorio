@@ -309,7 +309,7 @@ public class AdminController implements Initializable {
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
             @Override
             protected ArrayList<Object> call() throws Exception {
-                Message peticion = new Message("SERVER_DATA_QUERY", new ArrayList<Object>());
+                Message peticion = new Message("SERVIDOR","DATOS_SERVIDOR", new ArrayList<Object>());
                 ArrayList<Object> listaDatos = new ArrayList<Object>();
                 try {
                     App.out.writeObject(peticion);
@@ -368,7 +368,7 @@ public class AdminController implements Initializable {
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
             @Override
             protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ESTABL_QUERY", new ArrayList<Object>());
+                Message peticion = new Message("ESTABLECIMIENTO","GET_ESTABLECIMIENTOS", new ArrayList<Object>());
                 ArrayList<String> listaEstabl = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
@@ -408,7 +408,7 @@ public class AdminController implements Initializable {
             protected ArrayList<ArrayList<Object>> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
 
-                Message peticion = new Message("PROP_QUERY", data);
+                Message peticion = new Message("USUARIO","GET_PROPIETARIOS", data);
                 ArrayList<ArrayList<Object>> usuarios = new ArrayList<>();
 
                 try {
@@ -494,10 +494,10 @@ public class AdminController implements Initializable {
             protected ArrayList<Object> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
-                Message peticion = new Message("USER_DATA_QUERY", data);
+                Message peticion = new Message("USUARIO","GET_DATOS_USUARIO", data);
                 ArrayList<Object> datosUsuario = new ArrayList<Object>();
-                ArrayList<String> rolesUsuario = new ArrayList<String>();
-                ArrayList<String> establUsuario = new ArrayList<String>();
+//                ArrayList<String> rolesUsuario = new ArrayList<String>();
+//                ArrayList<String> establUsuario = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
@@ -505,13 +505,13 @@ public class AdminController implements Initializable {
                     datosUsuario.add((String) mensajeRespuesta.getData().get(0));
                     datosUsuario.add((String) mensajeRespuesta.getData().get(1));
                     datosUsuario.add((String) mensajeRespuesta.getData().get(2));
-                    rolesUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(3);
-                    datosUsuario.add(rolesUsuario);
-
-                    if (rolesUsuario.contains("trabajador") || rolesUsuario.contains("propietario")) {
-                        establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
-                        datosUsuario.add(establUsuario);
-                    }
+//                    rolesUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(3);
+//                    datosUsuario.add(rolesUsuario);
+//
+//                    if (rolesUsuario.contains("trabajador") || rolesUsuario.contains("propietario")) {
+//                        establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
+//                        datosUsuario.add(establUsuario);
+//                    }
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -535,7 +535,7 @@ public class AdminController implements Initializable {
         thread.start();
 
     }
-
+/*
     public void cargarRolesEstabl(String usuario) {
 
         panelEditarRolesEstabl.setVisible(true);
@@ -591,7 +591,78 @@ public class AdminController implements Initializable {
         thread.start();
 
     }
+*/
+    
+        public void cargarRolesEstabl(String usuario) {
 
+        panelEditarRolesEstabl.setVisible(true);
+
+        Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
+            @Override
+            protected ArrayList<Object> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<>();
+                data.add(usuario);
+
+                Message peticionDatosUsuario = new Message("USUARIO","GET_DATOS_USUARIO", data);
+                Message peticionEstablecimientos = new Message("ESTABLECIMIENTO","GET_ESTABLECIMIENTOS", new ArrayList<>());
+                Message peticionRoles = new Message("ROL","GET_ROLES", new ArrayList<>());
+
+                ArrayList<Object> datosRolesEstablecimientos = new ArrayList<>();
+
+                ArrayList<String> listaRolesDisponibles = new ArrayList<String>();
+                ArrayList<String> listaRolesUsuario = new ArrayList<String>();
+                ArrayList<String> listaEstablDisponibles = new ArrayList<String>();
+                ArrayList<String> listaEstablUsuario = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticionDatosUsuario);
+                    Message mensajeRespuestaDatosUsuario = (Message) App.in.readObject();
+                    listaRolesUsuario = (ArrayList<String>) mensajeRespuestaDatosUsuario.getData().get(3);//Set de Roles
+                    listaEstablUsuario = (ArrayList<String>) mensajeRespuestaDatosUsuario.getData().get(4);//Set de Establecimiento
+                    
+                    App.out.writeObject(peticionEstablecimientos);
+                    Message mensajeRespuestaEstablecimientos = (Message) App.in.readObject();
+                    listaEstablDisponibles = (ArrayList<String>) mensajeRespuestaEstablecimientos.getData().get(0);
+                    
+                    App.out.writeObject(peticionRoles);
+                    Message mensajeRespuestaRoles = (Message) App.in.readObject();
+                    listaRolesDisponibles = (ArrayList<String>) mensajeRespuestaRoles.getData().get(0);
+                    
+                    
+                    
+
+                    datosRolesEstablecimientos.add(listaRolesDisponibles);
+                    datosRolesEstablecimientos.add(listaRolesUsuario);
+                    datosRolesEstablecimientos.add(listaEstablDisponibles);
+                    datosRolesEstablecimientos.add(listaEstablUsuario);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return datosRolesEstablecimientos;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<Object> datosRolesEstablecimientos = task.getValue();
+            rolesDisponibles.getItems().clear();
+            rolesUsuarioInfo.getItems().clear();
+            establDisponibles.getItems().clear();
+            establUsuarioInfo.getItems().clear();
+
+            rolesDisponibles.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(0));
+            rolesUsuarioInfo.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(1));
+            establDisponibles.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(2));
+            establUsuarioInfo.getItems().addAll((ArrayList<String>) datosRolesEstablecimientos.get(3));
+            
+            
+            
+            
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
     @FXML
     public void cerrarEditarRoles(ActionEvent e) {
         panelEditarRolesEstabl.setVisible(false);
@@ -607,7 +678,7 @@ public class AdminController implements Initializable {
                 data.add(listaRolesUsuario);
                 data.add(listaEstablUsuario);
                 
-                Message peticion = new Message("ROLE_ESTABL_UPDATE", data);
+                Message peticion = new Message("USUARIO","ACTUALIZAR_ROLES_ESTABL", data);
 
                 boolean respuesta = false;
 
@@ -729,12 +800,16 @@ public class AdminController implements Initializable {
 //
 //                ArrayList<String> listaEstabl = new ArrayList<String>(establUsuarioInfo.getItems());
 //                nuevosDatos.add(listaEstabl);
-                Message peticion = new Message("USER_UPDATE", nuevosDatos);
+                Message peticion = new Message("USUARIO","ACTUALIZAR_DATOS", nuevosDatos);
                 boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
                     respuesta = (boolean) mensajeRespuesta.getData().get(0);
+                    
+                    if(respuesta){
+                        btnLabelUsuario.setText(nombreUsuarioInfo.getText());
+                    }
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -844,7 +919,7 @@ public class AdminController implements Initializable {
                     data.add(nombreEstabl.getText());
                     data.add(direccionEstabl.getText());
                     data.add(coordsEstabl.getText());
-                    Message peticion = new Message("INSERT_ESTABL", data);
+                    Message peticion = new Message("ESTABLECIMIENTO","INSERTAR", data);
                     boolean respuesta = false;
                     try {
                         App.out.writeObject(peticion);
@@ -918,7 +993,7 @@ public class AdminController implements Initializable {
                     data.add(roles);
                     data.add(establecimientos);
 
-                    Message peticion = new Message("INSERT_USER", data);
+                    Message peticion = new Message("USUARIO","INSERTAR", data);
                     boolean respuesta = false;
                     try {
                         App.out.writeObject(peticion);
@@ -970,7 +1045,7 @@ public class AdminController implements Initializable {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
 
-                Message peticion = new Message("LOG_OUT", data);
+                Message peticion = new Message("SERVIDOR","LOGOUT", data);
                 boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);
