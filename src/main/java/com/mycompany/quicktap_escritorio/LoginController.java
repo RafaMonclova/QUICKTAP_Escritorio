@@ -198,8 +198,40 @@ public class LoginController implements Initializable {
 
 
     @FXML
-    public void cerrarVentana(ActionEvent e) {
-        dialogPane.setVisible(false);
+    public void salir(ActionEvent e) {
+        
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                
+                Message peticion = new Message("LOGIN","SALIR", data);
+
+                try {
+                    App.out.writeObject(peticion);
+                    //Message mensajeRespuesta = (Message) App.in.readObject();
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return null;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("QuickTap - Salir");
+            alert.setHeaderText("Saliendo...");
+            alert.setContentText("Hasta la próxima!");
+            alert.showAndWait();
+            
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+        
     }
 
 }

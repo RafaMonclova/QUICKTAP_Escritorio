@@ -103,21 +103,12 @@
                         </ImageView>
                      </graphic>
                   </MFXButton>
-                  <Separator prefHeight="89.0" prefWidth="74.0" visible="false" />
+                  <Separator prefHeight="151.0" prefWidth="74.0" visible="false" />
                   <MFXButton fx:id="btnInfoUsuario" ellipsisString="" layoutX="20.0" layoutY="184.0" onAction="#panelInfoUsuario" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
                      <graphic>
                         <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
                            <image>
                               <Image url="@../../../icons8_more_info_60px.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                  </MFXButton>
-                  <MFXButton fx:id="btnSalir" ellipsisString="" layoutX="20.0" layoutY="344.0" onAction="#logout" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
-                     <graphic>
-                        <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../../../icons8_Logout_Rounded_60px.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -352,13 +343,8 @@
                         <Font size="14.0" />
                      </font>
                   </MFXButton>
-                  <Separator prefHeight="89.0" prefWidth="186.0" visible="false" />
+                  <Separator prefHeight="151.0" prefWidth="186.0" visible="false" />
                   <MFXButton fx:id="btnLabelUsuario" alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="143.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Mi perfil" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="209.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Salir" textFill="WHITE">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -412,7 +398,7 @@
                   <Font size="18.0" />
                </font>
             </MFXTextField>
-            <MFXTextField fx:id="correoUsuarioInfo" floatMode="DISABLED" layoutX="202.0" layoutY="167.0" prefHeight="66.0" prefWidth="338.0">
+            <MFXTextField fx:id="correoUsuarioInfo" floatMode="DISABLED" layoutX="201.0" layoutY="153.0" prefHeight="66.0" prefWidth="338.0">
                <effect>
                   <ColorAdjust hue="0.56" />
                </effect>
@@ -420,12 +406,12 @@
                   <Font size="18.0" />
                </font>
             </MFXTextField>
-            <MFXButton layoutX="314.0" layoutY="411.0" onAction="#actualizarDatosUsuario" prefHeight="56.0" prefWidth="171.0" text="Guardar cambios">
+            <MFXButton layoutX="267.0" layoutY="344.0" onAction="#actualizarDatosUsuario" prefHeight="66.0" prefWidth="207.0" text="Guardar cambios">
                <font>
                   <Font name="System Bold" size="18.0" />
                </font>
             </MFXButton>
-            <MFXPasswordField fx:id="passwUsuarioInfo" floatMode="DISABLED" layoutX="202.0" layoutY="254.0" prefHeight="66.0" prefWidth="338.0">
+            <MFXPasswordField fx:id="passwUsuarioInfo" floatMode="DISABLED" layoutX="201.0" layoutY="240.0" prefHeight="66.0" prefWidth="338.0">
                <effect>
                   <ColorAdjust hue="0.56" />
                </effect>
@@ -438,16 +424,28 @@
                   <Font name="System Bold" size="18.0" />
                </font>
             </Label>
-            <Label layoutX="45.0" layoutY="186.0" text="Correo">
+            <Label layoutX="45.0" layoutY="172.0" text="Correo">
                <font>
                   <Font name="System Bold" size="18.0" />
                </font>
             </Label>
-            <Label layoutX="45.0" layoutY="273.0" text="Contraseña">
+            <Label layoutX="45.0" layoutY="259.0" text="Contraseña">
                <font>
                   <Font name="System Bold" size="18.0" />
                </font>
             </Label>
+            <MFXButton fx:id="btnSalir" ellipsisString="" layoutX="563.0" layoutY="443.0" onAction="#logout" prefHeight="66.0" prefWidth="207.0" text="Cerrar sesión">
+               <graphic>
+                  <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../icons8_Logout_Rounded_60px.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </MFXButton>
          </children>
       </AnchorPane>
       <AnchorPane fx:id="panelModificarProp" layoutX="131.0" layoutY="105.0" prefHeight="546.0" prefWidth="800.0" visible="false" AnchorPane.bottomAnchor="0.6000000000000227" AnchorPane.leftAnchor="131.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="105.0">

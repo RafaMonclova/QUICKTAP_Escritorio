@@ -44,21 +44,14 @@ public class App extends Application {
             socket = new Socket("localhost", 4444);
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
+            System.out.println("Conectado al servidor");
             
-            Message mensaje = new Message("CONEXION","CONEXION",new ArrayList<Object>());
-            out.writeObject(mensaje);
-            
-            Message respuesta = (Message) in.readObject();
-            System.out.println(respuesta.getData().get(0));
-
         } catch (IOException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("ERROR");
             alert.setHeaderText("Se ha producido un error de conexión con el servidor.");
             alert.showAndWait();
             System.exit(1);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         scene = new Scene(loadFXML("login"), 681, 468);

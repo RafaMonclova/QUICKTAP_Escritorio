@@ -25,8 +25,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
@@ -40,6 +42,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -49,6 +53,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import message.Message;
 import netscape.javascript.JSObject;
@@ -56,6 +61,7 @@ import se.walkercrou.places.GooglePlaces;
 import se.walkercrou.places.Place;
 import se.walkercrou.places.exception.GooglePlacesException;
 import se.walkercrou.places.exception.NoResultsFoundException;
+import utilidades.FileUtils;
 
 /**
  * FXML Controller class
@@ -66,7 +72,7 @@ public class PropietarioController implements Initializable {
 
     FileChooser fileChooser = new FileChooser();
     File imagenSeleccionada;
-    
+
     @FXML
     private ImageView burger;
 
@@ -75,7 +81,7 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private MFXButton btnAltaCategoria;
-    
+
     @FXML
     private MFXButton btnAñadirProducto;
 
@@ -102,7 +108,7 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private AnchorPane panelAltaProducto;
-    
+
     @FXML
     private AnchorPane panelAltaCategoria;
 
@@ -136,8 +142,11 @@ public class PropietarioController implements Initializable {
     private AnchorPane panelAltaUsuario;
 
     @FXML
+    private AnchorPane panelVerProducto;
+
+    @FXML
     private ListView<String> listViewEstablecimientos;
-    
+
     @FXML
     private ListView<String> listViewCategSeleccionadas;
 
@@ -170,31 +179,31 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private ListView<String> establUsuarioInfo;
-    
+
     @FXML
     private ListView<String> listViewEstablCategoria;
-    
+
     @FXML
     private MFXTextField nombreCategoria;
-    
+
     @FXML
     private MFXTextField descripcionCategoria;
-    
+
     @FXML
     private MFXTextField nombreProducto;
-    
+
     @FXML
     private MFXTextField descripcionProducto;
-    
+
     @FXML
     private MFXTextField precioProducto;
-    
+
     @FXML
     private MFXTextField stockProducto;
-    
+
     @FXML
     private ImageView imagenProducto;
-    
+
     @FXML
     private ListView<String> listViewCategorias;
 
@@ -221,19 +230,67 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private Label db_trabajadoresOn;
-    
+
     @FXML
     private MFXFilterComboBox<String> comboSeleccionarEstabl;
+
+    @FXML
+    private MFXFilterComboBox<String> comboSeleccionarEstablListado;
+
+    @FXML
+    private TableView tablaProductos;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columDescripcionProd;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columNombreProd;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columPrecioProd;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columStockProd;
+
+    private String productoCargado;
+
+    @FXML
+    private MFXButton btnAltaProducto;
+
+    @FXML
+    private MFXButton btnModificarProducto;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
         btnMenu.setOnMouseClicked(event -> togglePanelLateral(panelMenu));
-        
+
+        // Agrega un evento al hacer clic en una fila
+        tablaProductos.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.getClickCount() == 1) { // Si se hizo un solo clic
+                    // Obtiene la fila seleccionada
+                    ArrayList<Object> filaSeleccionada = (ArrayList<Object>) tablaProductos.getSelectionModel().getSelectedItem();
+                    if (filaSeleccionada != null) {
+                        System.out.println(filaSeleccionada.get(0));
+                        System.out.println(filaSeleccionada.get(1));
+                        System.out.println(filaSeleccionada.get(2));
+                        System.out.println(filaSeleccionada.get(3));
+
+                        //Carga los roles y establecimientos para ser editados
+                        productoCargado = (String) filaSeleccionada.get(0);
+                        modificarProducto(productoCargado);
+
+                    }
+                }
+            }
+        });
+
         actualizarDashboard();
 
     }
-    
+
     @FXML
     public void cargarImagen() {
 
@@ -248,9 +305,8 @@ public class PropietarioController implements Initializable {
         }
         String imagePath = imagenSeleccionada.toURI().toString();
         Image image = new Image(imagePath);
-        
-        imagenProducto.setImage(image);
 
+        imagenProducto.setImage(image);
 
     }
 
@@ -300,11 +356,11 @@ public class PropietarioController implements Initializable {
     private void panelInicio(ActionEvent e) {
         labelVentanaActual.setText("Inicio");
         panelInicio.setVisible(true);
-        panelAltaProducto.setVisible(false);
+        panelVerProducto.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
-        
+
         actualizarDashboard();
 
     }
@@ -316,15 +372,13 @@ public class PropietarioController implements Initializable {
             protected ArrayList<Object> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
-                Message peticion = new Message("SERVIDOR","DATOS_ESTABL", data);
+                Message peticion = new Message("SERVIDOR", "DATOS_ESTABL", data);
                 ArrayList<Object> listaDatos = new ArrayList<Object>();
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
-                    
+
                     listaDatos = mensajeRespuesta.getData();
-                    
-                    
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -337,16 +391,16 @@ public class PropietarioController implements Initializable {
             ArrayList<Object> listaDatos = task.getValue();
 
             //Establece los datos obtenidos del servidor en los paneles
-            db_cajaHoy.setText((double)listaDatos.get(0)+"");
-            
-            db_trabajadoresOn.setText((int)listaDatos.get(1)+"");
-            
-            db_totalTrabajadores.setText((long)listaDatos.get(2)+"");
-            db_fechaRecarga.setText((String)listaDatos.get(3));
-            
-            db_totalPedidos.setText((long)listaDatos.get(4)+"");
-            db_pedidosFin.setText((long)listaDatos.get(5)+"");
-            db_pedidosPen.setText((long)listaDatos.get(6)+"");
+            db_cajaHoy.setText((double) listaDatos.get(0) + "");
+
+            db_trabajadoresOn.setText((int) listaDatos.get(1) + "");
+
+            db_totalTrabajadores.setText((long) listaDatos.get(2) + "");
+            db_fechaRecarga.setText((String) listaDatos.get(3));
+
+            db_totalPedidos.setText((long) listaDatos.get(4) + "");
+            db_pedidosFin.setText((long) listaDatos.get(5) + "");
+            db_pedidosPen.setText((long) listaDatos.get(6) + "");
         });
 
         Thread thread = new Thread(task);
@@ -354,38 +408,29 @@ public class PropietarioController implements Initializable {
     }
 
     @FXML
-    private void panelAltaProducto(ActionEvent e) {
-        labelVentanaActual.setText("Nuevo producto");
-        panelAltaProducto.setVisible(true);
+    private void panelVerProducto(ActionEvent e) {
+        labelVentanaActual.setText("Listado de producto");
+        panelVerProducto.setVisible(true);
         panelInicio.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
-        
-        //Carga la imagen por defecto del producto
-        try {
-            imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
-        } catch (URISyntaxException ex) {
-            ex.printStackTrace();
-        }
-        
-        //Carga los establecimientos del usuario, para obtener las categorías de cada uno
+
+        //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
             @Override
             protected ArrayList<String> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
-                Message peticion = new Message("USUARIO","GET_DATOS_USUARIO", data);
-                
-                
+                Message peticion = new Message("USUARIO", "GET_DATOS_USUARIO", data);
+
                 ArrayList<String> establUsuario = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
 
-                    //Obtiene los establecimientos del usuario
+                    //Obtiene los establecimientos
                     establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
-                    
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -396,7 +441,66 @@ public class PropietarioController implements Initializable {
 
         task.setOnSucceeded(event -> {
             ArrayList<String> establUsuario = task.getValue();
-            
+
+            //Carga en el combobox los establecimientos del usuario logeado
+            comboSeleccionarEstablListado.getItems().clear();
+            comboSeleccionarEstablListado.getItems().addAll(establUsuario);
+            comboSeleccionarEstablListado.setValue(establUsuario.get(0));
+            //new Thread(task2).start();
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
+    public void limpiarCampos() {
+
+    }
+
+    @FXML
+    private void panelAltaProducto(ActionEvent e) {
+        panelAltaProducto.setVisible(true);
+
+        //Abre la ventana para dar de alta un nuevo producto
+        btnAltaProducto.setVisible(true);
+        btnModificarProducto.setVisible(false);
+        comboSeleccionarEstabl.setVisible(true);
+
+        //Carga la imagen por defecto del producto
+        try {
+            imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
+        } catch (URISyntaxException ex) {
+            ex.printStackTrace();
+        }
+
+        //Carga los establecimientos del usuario, para obtener las categorías de cada uno
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                data.add(btnLabelUsuario.getText());
+                Message peticion = new Message("USUARIO", "GET_DATOS_USUARIO", data);
+
+                ArrayList<String> establUsuario = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    //Obtiene los establecimientos del usuario
+                    establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return establUsuario;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> establUsuario = task.getValue();
+
             comboSeleccionarEstabl.getItems().clear();
             comboSeleccionarEstabl.getItems().addAll(establUsuario);
             comboSeleccionarEstabl.setValue(establUsuario.get(0));
@@ -406,30 +510,27 @@ public class PropietarioController implements Initializable {
         thread.start();
 
     }
-    
+
     @FXML
-    public void rellenarCategorias(ActionEvent e){
-        
+    public void rellenarCategorias(ActionEvent e) {
+
         //Envía el establecimiento al servidor y recibe sus categorías asociadas
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
             @Override
             protected ArrayList<String> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
-                
+
                 data.add(comboSeleccionarEstabl.getValue());
-                Message peticion = new Message("CATEGORIA","GET_CATEGORIAS", data);
-                
-                
+                Message peticion = new Message("CATEGORIA", "GET_CATEGORIAS", data);
+
                 ArrayList<String> categoriasEstabl = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
 
-                    for(Object o : mensajeRespuesta.getData()){
+                    for (Object o : mensajeRespuesta.getData()) {
                         categoriasEstabl.add((String) o);
                     }
-                    
-                    
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -440,7 +541,7 @@ public class PropietarioController implements Initializable {
 
         task.setOnSucceeded(event -> {
             ArrayList<String> categoriasEstabl = task.getValue();
-            
+
             listViewCategorias.getItems().clear();
             listViewCategSeleccionadas.getItems().clear();
             listViewCategorias.getItems().addAll(categoriasEstabl);
@@ -448,27 +549,159 @@ public class PropietarioController implements Initializable {
 
         Thread thread = new Thread(task);
         thread.start();
-        
+
     }
-    
+
+    @FXML
+    public void rellenarProductos(ActionEvent e) {
+
+        //Envía el establecimiento al servidor y recibe sus categorías asociadas
+        Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
+            @Override
+            protected ArrayList<ArrayList<Object>> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                data.add(comboSeleccionarEstablListado.getValue());
+                Message peticion = new Message("PRODUCTO", "GET_PRODUCTOS", data);
+
+                ArrayList<ArrayList<Object>> productos = new ArrayList<>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    ArrayList<Object> datosRecibidos = (ArrayList<Object>) mensajeRespuesta.getData();
+
+                    for (Object listado : datosRecibidos) {
+                        productos.add((ArrayList<Object>) listado);
+                    }
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return productos;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<ArrayList<Object>> productos = task.getValue();
+
+            // Agregar las columnas a la tabla
+            columNombreProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(0));
+                }
+            });
+
+            columDescripcionProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(1));
+                }
+            });
+
+            columPrecioProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(2));
+                }
+            });
+
+            columStockProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(3));
+                }
+            });
+
+            // Asignar las filas a la tabla
+            tablaProductos.setItems(FXCollections.observableArrayList(productos));
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
+    public void rellenarProductos(String establecimiento) {
+
+        //Envía el establecimiento al servidor y recibe sus categorías asociadas
+        Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
+            @Override
+            protected ArrayList<ArrayList<Object>> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                data.add(establecimiento);
+                Message peticion = new Message("PRODUCTO", "GET_PRODUCTOS", data);
+
+                ArrayList<ArrayList<Object>> productos = new ArrayList<>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    ArrayList<Object> datosRecibidos = (ArrayList<Object>) mensajeRespuesta.getData();
+
+                    for (Object listado : datosRecibidos) {
+                        productos.add((ArrayList<Object>) listado);
+                    }
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return productos;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<ArrayList<Object>> productos = task.getValue();
+
+            // Agregar las columnas a la tabla
+            columNombreProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(0));
+                }
+            });
+
+            columDescripcionProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(1));
+                }
+            });
+
+            columPrecioProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(2));
+                }
+            });
+
+            columStockProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(3));
+                }
+            });
+
+            // Asignar las filas a la tabla
+            tablaProductos.setItems(FXCollections.observableArrayList(productos));
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
     @FXML
     private void panelAltaCategoria(ActionEvent e) {
         labelVentanaActual.setText("Nueva categoría");
         panelAltaCategoria.setVisible(true);
-        panelAltaProducto.setVisible(false);
+        panelVerProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
-        
+
         //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
             @Override
             protected ArrayList<String> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
-                Message peticion = new Message("USUARIO","GET_DATOS_USUARIO", data);
-                
-                
+                Message peticion = new Message("USUARIO", "GET_DATOS_USUARIO", data);
+
                 ArrayList<String> establUsuario = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
@@ -476,7 +709,6 @@ public class PropietarioController implements Initializable {
 
                     //Obtiene los establecimientos
                     establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
-                    
 
                 } catch (IOException ex) {
                     Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
@@ -487,7 +719,7 @@ public class PropietarioController implements Initializable {
 
         task.setOnSucceeded(event -> {
             ArrayList<String> establUsuario = task.getValue();
-            
+
             listViewEstablCategoria.getItems().clear();
             listViewCategSeleccionadas.getItems().clear();
             listViewEstablCategoria.getItems().addAll(establUsuario);
@@ -502,7 +734,7 @@ public class PropietarioController implements Initializable {
     private void panelAltaUsuario(ActionEvent e) {
         labelVentanaActual.setText("Nuevo Usuario");
         panelAltaUsuario.setVisible(true);
-        panelAltaProducto.setVisible(false);
+        panelVerProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
@@ -514,7 +746,7 @@ public class PropietarioController implements Initializable {
                 //Devuelve los establecimientos del usuario logeado
                 ArrayList<Object> datos = new ArrayList<>();
                 datos.add(btnLabelUsuario.getText());
-                Message peticion = new Message("ESTABLECIMIENTO","GET_ESTABLECIMIENTOS_USUARIO", datos);
+                Message peticion = new Message("ESTABLECIMIENTO", "GET_ESTABLECIMIENTOS_USUARIO", datos);
                 ArrayList<String> listaEstabl = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
@@ -544,7 +776,7 @@ public class PropietarioController implements Initializable {
         labelVentanaActual.setText("Perfil de Usuario");
         panelInfoUsuario.setVisible(true);
         panelAltaUsuario.setVisible(false);
-        panelAltaProducto.setVisible(false);
+        panelVerProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelAltaCategoria.setVisible(false);
 
@@ -554,7 +786,7 @@ public class PropietarioController implements Initializable {
             protected ArrayList<Object> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
-                Message peticion = new Message("USUARIO","GET_DATOS_USUARIO", data);
+                Message peticion = new Message("USUARIO", "GET_DATOS_USUARIO", data);
                 ArrayList<Object> datosUsuario = new ArrayList<Object>();
                 ArrayList<String> rolesUsuario = new ArrayList<String>();
                 ArrayList<String> establUsuario = new ArrayList<String>();
@@ -596,6 +828,97 @@ public class PropietarioController implements Initializable {
 
     }
 
+    public void modificarProducto(String producto) {
+
+        //Abre la ventana usada para dar de alta un nuevo producto, usada también para modificar sus datos
+        panelAltaProducto.setVisible(true);
+        btnAltaProducto.setVisible(false);
+        btnModificarProducto.setVisible(true);
+        comboSeleccionarEstabl.setVisible(false);
+
+        //Carga la información del producto
+        Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
+            @Override
+            protected ArrayList<Object> call() throws Exception {
+                ArrayList<Object> data1 = new ArrayList<Object>();
+                ArrayList<Object> data2 = new ArrayList<Object>();
+
+                //Datos para buscar el producto
+                data1.add(producto);
+                data1.add(comboSeleccionarEstablListado.getValue());
+
+                //Datos para buscar las categorías
+                data2.add(comboSeleccionarEstablListado.getValue());
+
+                Message peticion = new Message("PRODUCTO", "GET_DATOS_PRODUCTO", data1);
+                Message peticionCategorias = new Message("CATEGORIA", "GET_CATEGORIAS", data2);
+
+                ArrayList<Object> datosProducto = new ArrayList<>();
+                ArrayList<String> categoriasDisponibles = new ArrayList<String>();
+
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    App.out.writeObject(peticionCategorias);
+                    Message mensajeRespuestaCategorias = (Message) App.in.readObject();
+
+                    datosProducto = new ArrayList<>(mensajeRespuesta.getData());
+//                    datosProducto.add((String) mensajeRespuesta.getData().get(0));
+//                    datosProducto.add((String) mensajeRespuesta.getData().get(1));
+//                    datosProducto.add((String) mensajeRespuesta.getData().get(2));
+//                    datosProducto.add((String) mensajeRespuesta.getData().get(3));
+//                    datosProducto.add((byte[]) mensajeRespuesta.getData().get(4));
+                    //datosProducto.add((ArrayList<String>) mensajeRespuesta.getData().get(5));
+
+                    System.out.println("Tamaño:" + datosProducto.size());
+
+                    //Añade a la lista devuelta las categorías disponibles
+                    for (Object o : mensajeRespuestaCategorias.getData()) {
+                        categoriasDisponibles.add((String) o);
+                    }
+
+                    System.out.println(categoriasDisponibles);
+
+                    datosProducto.add(categoriasDisponibles);
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                return datosProducto;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<Object> datosProducto = task.getValue();
+
+            nombreProducto.setText((String) datosProducto.get(0));
+            descripcionProducto.setText((String) datosProducto.get(1));
+            double precio = (double) datosProducto.get(2);
+            precioProducto.setText(precio + "");
+            int stock = (int) datosProducto.get(3);
+            stockProducto.setText(stock + "");
+            byte[] imagenBytes = (byte[]) datosProducto.get(4);
+
+            Image imagen = FileUtils.bytesToImage(imagenBytes);
+
+            imagenProducto.setImage(imagen);
+
+            ArrayList<String> categorias = (ArrayList<String>) datosProducto.get(5);
+            ArrayList<String> categoriasDisponibles = (ArrayList<String>) datosProducto.get(6);
+
+            listViewCategorias.getItems().clear();
+            listViewCategorias.getItems().addAll(categoriasDisponibles);
+            listViewCategSeleccionadas.getItems().clear();
+            listViewCategSeleccionadas.getItems().addAll(categorias);
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
     @FXML
     public void editarRoles(ActionEvent e) {
 
@@ -608,7 +931,7 @@ public class PropietarioController implements Initializable {
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
             @Override
             protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ROL","GET_ROLES", new ArrayList<Object>());
+                Message peticion = new Message("ROL", "GET_ROLES", new ArrayList<Object>());
                 ArrayList<String> listaRoles = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
@@ -645,7 +968,7 @@ public class PropietarioController implements Initializable {
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
             @Override
             protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ESTABLECIMIENTO","GET_ESTABLECIMIENTOS", new ArrayList<Object>());
+                Message peticion = new Message("ESTABLECIMIENTO", "GET_ESTABLECIMIENTOS", new ArrayList<Object>());
                 ArrayList<String> listaEstabl = new ArrayList<String>();
                 try {
                     App.out.writeObject(peticion);
@@ -739,7 +1062,7 @@ public class PropietarioController implements Initializable {
         }
 
     }
-    
+
     //Añade una categoría al producto en el formulario de alta de producto
     @FXML
     public void añadirCategoria(ActionEvent e) {
@@ -767,9 +1090,14 @@ public class PropietarioController implements Initializable {
             alert.setContentText("El producto debe tener al menos una categoría.");
             alert.showAndWait();
         } else {
-            listViewCategSeleccionadas.getItems().remove(listViewCategorias.getSelectionModel().getSelectedItem());
+            listViewCategSeleccionadas.getItems().remove(listViewCategSeleccionadas.getSelectionModel().getSelectedItem());
         }
 
+    }
+
+    @FXML
+    public void cerrarVentanaProducto(ActionEvent e) {
+        panelAltaProducto.setVisible(false);
     }
 
     //Modifica los datos del usuario en la base de datos. 
@@ -788,15 +1116,14 @@ public class PropietarioController implements Initializable {
                 nuevosDatos.add(correoUsuarioInfo.getText());
                 nuevosDatos.add(passwUsuarioInfo.getText());
 
-
-                Message peticion = new Message("USUARIO","ACTUALIZAR_DATOS", nuevosDatos);
+                Message peticion = new Message("USUARIO", "ACTUALIZAR_DATOS", nuevosDatos);
                 boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
                     respuesta = (boolean) mensajeRespuesta.getData().get(0);
-                    
-                    if(respuesta){
+
+                    if (respuesta) {
                         btnLabelUsuario.setText(nombreUsuarioInfo.getText());
                     }
 
@@ -850,8 +1177,8 @@ public class PropietarioController implements Initializable {
                     data.add(nombreCategoria.getText());
                     data.add(descripcionCategoria.getText());
                     data.add(listViewEstablCategoria.getSelectionModel().getSelectedItem());
-                    
-                    Message peticion = new Message("CATEGORIA","INSERTAR", data);
+
+                    Message peticion = new Message("CATEGORIA", "INSERTAR", data);
                     boolean respuesta = false;
                     try {
                         App.out.writeObject(peticion);
@@ -876,7 +1203,7 @@ public class PropietarioController implements Initializable {
                     alert.showAndWait();
                     nombreCategoria.setText("");
                     descripcionCategoria.setText("");
-                    
+
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");
@@ -892,7 +1219,7 @@ public class PropietarioController implements Initializable {
         }
 
     }
-    
+
     @FXML
     public void añadirNuevoProducto(ActionEvent e) {
 
@@ -909,23 +1236,23 @@ public class PropietarioController implements Initializable {
                 @Override
                 protected Boolean call() throws Exception {
                     ArrayList<Object> data = new ArrayList<Object>();
-                    
+
                     ArrayList<String> categorias = new ArrayList<>(listViewCategSeleccionadas.getItems());
                     data.add(nombreProducto.getText());
                     data.add(descripcionProducto.getText());
                     data.add(comboSeleccionarEstabl.getValue());
                     data.add(Double.parseDouble(precioProducto.getText()));
                     data.add(Integer.parseInt(stockProducto.getText()));
-                    
+
                     data.add(categorias);
-                    
+
                     //Obtiene la imagen seleccionada del file chooser. Si no se pulsó el botón para elegir imagen, carga la por defecto
-                    String imagePath = imagenSeleccionada.toURI().toString();
-                    Image image = new Image(imagePath);
-                    
-                    data.add(image);
-                    
-                    Message peticion = new Message("PRODUCTO","INSERTAR", data);
+                    //String imagePath = imagenSeleccionada.toURI().toString();
+                    //Image image = new Image(imagePath);
+                    byte[] imagen = FileUtils.fileToBytes(imagenSeleccionada);
+                    data.add(imagen);
+
+                    Message peticion = new Message("PRODUCTO", "INSERTAR", data);
                     boolean respuesta = false;
                     try {
                         App.out.writeObject(peticion);
@@ -948,9 +1275,25 @@ public class PropietarioController implements Initializable {
                     alert.setHeaderText("Correcto");
                     alert.setContentText("Producto dado de alta.");
                     alert.showAndWait();
-                    nombreCategoria.setText("");
-                    descripcionCategoria.setText("");
+                    nombreProducto.setText("");
+                    descripcionProducto.setText("");
+                    precioProducto.setText("");
+                    stockProducto.setText("");
+
+                    //Carga la imagen por defecto del producto
+                    try {
+                        imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
+                    } catch (URISyntaxException ex) {
+                        ex.printStackTrace();
+                    }
                     
+                    String imagePath = imagenSeleccionada.toURI().toString();
+                    Image image = new Image(imagePath);
+
+                    imagenProducto.setImage(image);
+
+                    panelAltaProducto.setVisible(false);
+
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");
@@ -987,7 +1330,7 @@ public class PropietarioController implements Initializable {
 
                     ArrayList<String> roles = new ArrayList<String>();
                     ArrayList<String> establecimientos = new ArrayList<String>();
-                    
+
                     //Añade rol trabajador al nuevo usuario
                     roles.add("trabajador"); //Rol trabajador
                     establecimientos.add(listViewEstablecimientos.getSelectionModel().getSelectedItem());
@@ -998,7 +1341,7 @@ public class PropietarioController implements Initializable {
                     data.add(roles);
                     data.add(establecimientos);
 
-                    Message peticion = new Message("USUARIO","INSERTAR", data);
+                    Message peticion = new Message("USUARIO", "INSERTAR", data);
                     boolean respuesta = false;
                     try {
                         App.out.writeObject(peticion);
@@ -1040,6 +1383,74 @@ public class PropietarioController implements Initializable {
 
     }
 
+    @FXML
+    private void actualizarDatosProducto(ActionEvent e) {
+
+        //Envía los nuevos datos al servidor
+        Task<Boolean> task = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+
+                ArrayList<Object> nuevosDatos = new ArrayList<Object>();
+
+                nuevosDatos.add(productoCargado);
+                nuevosDatos.add(comboSeleccionarEstablListado.getValue());
+
+                nuevosDatos.add(nombreProducto.getText());
+                nuevosDatos.add(descripcionProducto.getText());
+                nuevosDatos.add(precioProducto.getText());
+                nuevosDatos.add(stockProducto.getText());
+
+                byte[] imagenBytes = FileUtils.imageToBytes(imagenProducto.getImage(), "png");
+                nuevosDatos.add(imagenBytes);
+
+                ArrayList<String> categorias = new ArrayList<>(listViewCategSeleccionadas.getItems());
+                nuevosDatos.add(categorias);
+
+                Message peticion = new Message("PRODUCTO", "ACTUALIZAR_DATOS_PRODUCTO", nuevosDatos);
+                boolean respuesta = false;
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                    if (respuesta) {
+                        panelAltaProducto.setVisible(false);
+                        rellenarProductos(e);
+                        //btnLabelUsuario.setText(nombreUsuarioInfo.getText());
+                    }
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return respuesta;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            boolean respuesta = task.getValue();
+
+            if (respuesta) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Información");
+                alert.setHeaderText("Correcto");
+                alert.setContentText("Datos actualizados.");
+                alert.showAndWait();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("ERROR");
+                alert.setHeaderText("Error al modificar los datos");
+                alert.setContentText("Revise los datos introducidos.");
+                alert.showAndWait();
+            }
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
     //Envía al servidor el nombre del usuario que cierra sesión, y vuelve a la pantalla de login
     @FXML
     public void logout(ActionEvent e) {
@@ -1050,7 +1461,7 @@ public class PropietarioController implements Initializable {
                 ArrayList<Object> data = new ArrayList<Object>();
                 data.add(btnLabelUsuario.getText());
 
-                Message peticion = new Message("SERVIDOR","LOGOUT", data);
+                Message peticion = new Message("SERVIDOR", "LOGOUT", data);
                 boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);

@@ -51,5 +51,6 @@
             <ColorAdjust hue="0.56" />
          </effect>
       </MFXTextField>
+      <MFXButton layoutX="623.0" layoutY="26.0" onAction="#salir" text="Salir" />
    </children>
 </AnchorPane>
