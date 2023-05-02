@@ -251,8 +251,32 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private TableColumn<List<Object>, Object> columStockProd;
-
+    
     private String productoCargado;
+    
+    @FXML
+    private TableView tablaPedidos;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columPedido;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columCliente;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columProducto;
+
+    @FXML
+    private TableColumn<List<Object>, Object> columCantidad;
+    
+    @FXML
+    private TableColumn<List<Object>, Object> columEstado;
+    
+    @FXML
+    private MFXFilterComboBox<String> comboSeleccionarEstablPedidos;
+    
+    @FXML
+    private AnchorPane panelPedidos;
 
     @FXML
     private MFXButton btnAltaProducto;
@@ -360,6 +384,7 @@ public class PropietarioController implements Initializable {
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
+        panelPedidos.setVisible(false);
 
         actualizarDashboard();
 
@@ -406,6 +431,44 @@ public class PropietarioController implements Initializable {
         Thread thread = new Thread(task);
         thread.start();
     }
+    
+    @FXML
+    public void verCajaEstablecimientos(ActionEvent e){
+        
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("verEstablecimientos.fxml"));
+            Parent root1 = (Parent) fxmlLoader.load();
+            VerEstablecimientosController controller = fxmlLoader.<VerEstablecimientosController>getController();
+            controller.setUsuario(btnLabelUsuario.getText());
+            
+            Stage stage = new Stage();
+            stage.setTitle("QuickTap - Datos cajas");
+            stage.setScene(new Scene(root1, 600, 400));
+            stage.show();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+    }
+    
+    @FXML
+    public void verTrabajadoresConectados(ActionEvent e){
+        
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("verTrabajadores.fxml"));
+            Parent root1 = (Parent) fxmlLoader.load();
+            VerTrabajadoresController controller = fxmlLoader.<VerTrabajadoresController>getController();
+            controller.setUsuario(btnLabelUsuario.getText());
+            
+            Stage stage = new Stage();
+            stage.setTitle("QuickTap - Listado de trabajadores");
+            stage.setScene(new Scene(root1, 600, 400));
+            stage.show();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+    }
 
     @FXML
     private void panelVerProducto(ActionEvent e) {
@@ -415,6 +478,7 @@ public class PropietarioController implements Initializable {
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
+        panelPedidos.setVisible(false);
 
         //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -445,7 +509,7 @@ public class PropietarioController implements Initializable {
             //Carga en el combobox los establecimientos del usuario logeado
             comboSeleccionarEstablListado.getItems().clear();
             comboSeleccionarEstablListado.getItems().addAll(establUsuario);
-            comboSeleccionarEstablListado.setValue(establUsuario.get(0));
+            //comboSeleccionarEstablListado.setValue(establUsuario.get(0));
             //new Thread(task2).start();
 
         });
@@ -510,6 +574,55 @@ public class PropietarioController implements Initializable {
         thread.start();
 
     }
+    
+    @FXML
+    private void panelPedidos(ActionEvent e) {
+        labelVentanaActual.setText("Listado de pedidos");
+        panelPedidos.setVisible(true);
+        panelVerProducto.setVisible(false);
+        panelInicio.setVisible(false);
+        panelAltaUsuario.setVisible(false);
+        panelInfoUsuario.setVisible(false);
+        panelAltaCategoria.setVisible(false);
+        
+        //Carga la información del usuario (en este caso, sus establecimientos)
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+                data.add(btnLabelUsuario.getText());
+                Message peticion = new Message("USUARIO", "GET_DATOS_USUARIO", data);
+
+                ArrayList<String> establUsuario = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    //Obtiene los establecimientos
+                    establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return establUsuario;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> establUsuario = task.getValue();
+
+            //Carga en el combobox los establecimientos del usuario logeado
+            comboSeleccionarEstablPedidos.getItems().clear();
+            comboSeleccionarEstablPedidos.getItems().addAll(establUsuario);
+            //comboSeleccionarEstablListado.setValue(establUsuario.get(0));
+            //new Thread(task2).start();
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+        
+    }    
 
     @FXML
     public void rellenarCategorias(ActionEvent e) {
@@ -555,7 +668,7 @@ public class PropietarioController implements Initializable {
     @FXML
     public void rellenarProductos(ActionEvent e) {
 
-        //Envía el establecimiento al servidor y recibe sus categorías asociadas
+        //Envía el establecimiento al servidor y recibe sus productos asociados
         Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
             @Override
             protected ArrayList<ArrayList<Object>> call() throws Exception {
@@ -612,6 +725,79 @@ public class PropietarioController implements Initializable {
 
             // Asignar las filas a la tabla
             tablaProductos.setItems(FXCollections.observableArrayList(productos));
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+    
+    @FXML
+    public void rellenarPedidos(ActionEvent e) {
+
+        //Envía el establecimiento al servidor y recibe sus pedidos asociados
+        Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
+            @Override
+            protected ArrayList<ArrayList<Object>> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                data.add(comboSeleccionarEstablListado.getValue());
+                Message peticion = new Message("PEDIDO", "GET_PEDIDOS", data);
+
+                ArrayList<ArrayList<Object>> pedidos = new ArrayList<>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    ArrayList<Object> datosRecibidos = (ArrayList<Object>) mensajeRespuesta.getData();
+
+                    for (Object listado : datosRecibidos) {
+                        pedidos.add((ArrayList<Object>) listado);
+                    }
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return pedidos;
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            ArrayList<ArrayList<Object>> pedidos = task.getValue();
+
+            // Agregar las columnas a la tabla
+            columPedido.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(0));
+                }
+            });
+
+            columCliente.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(1));
+                }
+            });
+
+            columProducto.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(2));
+                }
+            });
+
+            columCantidad.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(3));
+                }
+            });
+            
+            columEstado.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
+                    return new SimpleObjectProperty<Object>(c.getValue().get(4));
+                }
+            });
+
+            // Asignar las filas a la tabla
+            tablaPedidos.setItems(FXCollections.observableArrayList(pedidos));
         });
 
         Thread thread = new Thread(task);
@@ -693,6 +879,7 @@ public class PropietarioController implements Initializable {
         panelInicio.setVisible(false);
         panelAltaUsuario.setVisible(false);
         panelInfoUsuario.setVisible(false);
+        panelPedidos.setVisible(false);
 
         //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -732,12 +919,13 @@ public class PropietarioController implements Initializable {
 
     @FXML
     private void panelAltaUsuario(ActionEvent e) {
-        labelVentanaActual.setText("Nuevo Usuario");
+        labelVentanaActual.setText("Nuevo trabajador");
         panelAltaUsuario.setVisible(true);
         panelVerProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
+        panelPedidos.setVisible(false);
 
         //Carga los establecimientos disponibles
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -779,6 +967,7 @@ public class PropietarioController implements Initializable {
         panelVerProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelAltaCategoria.setVisible(false);
+        panelPedidos.setVisible(false);
 
         //Carga la información del usuario
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {

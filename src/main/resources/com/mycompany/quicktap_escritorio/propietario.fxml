@@ -64,7 +64,7 @@
                         </ImageView>
                      </graphic>
                   </MFXButton>
-                  <MFXButton fx:id="btnAltaCategoria1" ellipsisString="" layoutX="20.0" layoutY="268.0" onAction="#panelAltaCategoria" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                  <MFXButton fx:id="btnPedidos" ellipsisString="" layoutX="20.0" layoutY="268.0" onAction="#panelPedidos" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
                      <graphic>
                         <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -87,7 +87,7 @@
             </VBox>
          </children>
       </AnchorPane>
-      <GridPane fx:id="panelInicio" hgap="20.0" layoutX="141.0" layoutY="99.0" prefHeight="530.0" prefWidth="719.0" vgap="20.0" AnchorPane.bottomAnchor="22.600000000000023" AnchorPane.leftAnchor="141.0" AnchorPane.rightAnchor="53.799999999999955" AnchorPane.topAnchor="99.0">
+      <GridPane fx:id="panelInicio" hgap="20.0" layoutX="141.0" layoutY="99.0" prefHeight="530.0" prefWidth="719.0" vgap="20.0" visible="false" AnchorPane.bottomAnchor="22.600000000000023" AnchorPane.leftAnchor="141.0" AnchorPane.rightAnchor="53.799999999999955" AnchorPane.topAnchor="99.0">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -127,7 +127,7 @@
                         <Image url="@../../../icons8_brake_warning_70px.png" />
                      </image>
                   </ImageView>
-                  <MFXButton buttonType="RAISED" layoutX="95.0" layoutY="157.0" prefHeight="38.0" prefWidth="207.0" text="Ver establecimientos" textFill="#898989">
+                  <MFXButton buttonType="RAISED" layoutX="95.0" layoutY="157.0" onAction="#verCajaEstablecimientos" prefHeight="38.0" prefWidth="207.0" text="Ver establecimientos" textFill="#898989">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -159,12 +159,12 @@
                      </font>
                   </Label>
                   <Separator layoutX="8.0" layoutY="114.0" prefHeight="5.0" prefWidth="330.0" />
-                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="62.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fitHeight="38.0" fitWidth="44.0" layoutX="43.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../../../icons8_list_70px.png" />
                      </image>
                   </ImageView>
-                  <MFXButton buttonType="RAISED" layoutX="108.0" layoutY="157.0" prefHeight="38.0" prefWidth="158.0" text="Ver listado" textFill="#898989">
+                  <MFXButton buttonType="RAISED" layoutX="108.0" layoutY="157.0" onAction="#verTrabajadoresConectados" prefHeight="38.0" prefWidth="158.0" text="Ver listado" textFill="#898989">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -596,6 +596,89 @@
                   <MFXButton layoutX="477.0" layoutY="407.0" onAction="#añadirCategoria" text="Añadir" />
                   <MFXButton layoutX="678.0" layoutY="407.0" onAction="#quitarCategoria" text="Quitar" />
                   <MFXButton fx:id="btnModificarProducto" layoutX="156.0" layoutY="454.0" onAction="#actualizarDatosProducto" prefHeight="56.0" prefWidth="174.0" text="Guardar cambios" visible="false">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton layoutX="772.0" layoutY="1.0" onAction="#cerrarVentanaProducto" prefHeight="31.0" prefWidth="38.0" style="-fx-background-color: red; -fx-border-color: black;" text="X" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </MFXButton>
+               </children>
+            </AnchorPane>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="panelPedidos" layoutX="98.0" layoutY="86.0" prefHeight="575.0" prefWidth="830.0">
+         <children>
+            <MFXFilterComboBox fx:id="comboSeleccionarEstablPedidos" layoutX="235.0" layoutY="442.0" onAction="#rellenarPedidos" prefHeight="40.0" prefWidth="180.0" />
+            <TableView fx:id="tablaPedidos" layoutX="77.0" layoutY="44.0" prefHeight="350.0" prefWidth="685.0">
+               <columns>
+                  <TableColumn fx:id="columPedido" prefWidth="109.59996032714844" text="Pedido" />
+                  <TableColumn fx:id="columCliente" prefWidth="139.199951171875" text="Cliente" />
+                  <TableColumn fx:id="columProducto" prefWidth="194.4000244140625" text="Producto" />
+                  <TableColumn fx:id="columCantidad" prefWidth="99.2000732421875" text="Cantidad" />
+                  <TableColumn fx:id="columEstado" prefWidth="141.5999755859375" text="Estado" />
+               </columns>
+            </TableView>
+            <Label layoutX="253.0" layoutY="423.0" text="Seleccione establecimiento" />
+            <AnchorPane fx:id="panelAltaProducto1" layoutX="-8.0" layoutY="-15.0" prefHeight="546.0" prefWidth="806.0" style="-fx-background-color: FFE6C7; -fx-border-color: black;" visible="false">
+               <children>
+                  <MFXTextField fx:id="nombreProducto1" floatingText="Nombre*" layoutX="45.0" layoutY="56.0" prefHeight="65.0" prefWidth="350.0" style="-fx-border-color: black;">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXTextField>
+                  <MFXTextField fx:id="descripcionProducto1" floatingText="Descripción*" layoutX="45.0" layoutY="150.0" prefHeight="65.0" prefWidth="350.0" style="-fx-border-color: black;">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXTextField>
+                  <MFXTextField fx:id="precioProducto1" floatingText="Precio*" layoutX="45.0" layoutY="245.0" prefHeight="66.0" prefWidth="350.0" style="-fx-border-color: black;">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXTextField>
+                  <ListView fx:id="listViewCategorias1" layoutX="414.0" layoutY="245.0" prefHeight="162.0" prefWidth="180.0" style="-fx-border-color: black;" />
+                  <Label layoutX="431.0" layoutY="220.0" text="Categorías disponibles" />
+                  <MFXButton fx:id="btnAltaProducto1" layoutX="141.0" layoutY="454.0" onAction="#añadirNuevoProducto" prefHeight="56.0" prefWidth="158.0" text="Dar de alta">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXTextField fx:id="stockProducto1" floatingText="Stock Inicial*" layoutX="45.0" layoutY="340.0" prefHeight="66.0" prefWidth="350.0" style="-fx-border-color: black;">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXTextField>
+                  <ImageView fx:id="imagenProducto1" fitHeight="150.0" fitWidth="200.0" layoutX="594.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../no-image.png" />
+                     </image>
+                  </ImageView>
+                  <MFXButton layoutX="431.0" layoutY="102.0" onAction="#cargarImagen" prefHeight="38.0" prefWidth="126.0" text="Seleccionar">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXFilterComboBox fx:id="comboSeleccionarEstabl1" layoutX="524.0" layoutY="462.0" onAction="#rellenarCategorias" prefHeight="40.0" prefWidth="180.0" />
+                  <ListView fx:id="listViewCategSeleccionadas1" layoutX="614.0" layoutY="245.0" prefHeight="162.0" prefWidth="180.0" style="-fx-border-color: black;" />
+                  <Label layoutX="619.0" layoutY="220.0" text="Categorías seleccionadas" />
+                  <MFXButton layoutX="477.0" layoutY="407.0" onAction="#añadirCategoria" text="Añadir" />
+                  <MFXButton layoutX="678.0" layoutY="407.0" onAction="#quitarCategoria" text="Quitar" />
+                  <MFXButton fx:id="btnModificarProducto1" layoutX="156.0" layoutY="454.0" onAction="#actualizarDatosProducto" prefHeight="56.0" prefWidth="174.0" text="Guardar cambios" visible="false">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
