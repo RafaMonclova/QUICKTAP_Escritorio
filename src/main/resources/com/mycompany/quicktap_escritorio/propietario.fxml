@@ -37,7 +37,7 @@
                         </ImageView>
                      </graphic>
                   </MFXButton>
-                  <MFXButton fx:id="btnAñadirTrabajador" ellipsisString="" onAction="#panelAltaUsuario" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
+                  <MFXButton fx:id="btnAñadirTrabajador" ellipsisString="" onAction="#panelTrabajadores" prefHeight="62.0" prefWidth="74.0" style="-fx-background-color: #454545;">
                      <graphic>
                         <ImageView fitHeight="56.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -87,7 +87,7 @@
             </VBox>
          </children>
       </AnchorPane>
-      <GridPane fx:id="panelInicio" hgap="20.0" layoutX="141.0" layoutY="99.0" prefHeight="530.0" prefWidth="719.0" vgap="20.0" visible="false" AnchorPane.bottomAnchor="22.600000000000023" AnchorPane.leftAnchor="141.0" AnchorPane.rightAnchor="53.799999999999955" AnchorPane.topAnchor="99.0">
+      <GridPane fx:id="panelInicio" hgap="20.0" layoutX="141.0" layoutY="99.0" prefHeight="530.0" prefWidth="719.0" vgap="20.0" AnchorPane.bottomAnchor="22.600000000000023" AnchorPane.leftAnchor="141.0" AnchorPane.rightAnchor="53.799999999999955" AnchorPane.topAnchor="99.0">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -272,80 +272,6 @@
             </AnchorPane>
          </children>
       </GridPane>
-      <AnchorPane fx:id="panelMenu" layoutX="74.0" layoutY="80.0" prefHeight="479.0" prefWidth="207.0" style="-fx-background-color: #454545;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="72.0">
-         <children>
-            <VBox layoutY="10.0" prefHeight="574.0" prefWidth="207.0" style="-fx-spacing: 20px; -fx-padding: 10px;" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0">
-               <children>
-                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Inicio" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="10.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Nuevo trabajador" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="20.0" layoutY="179.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Nueva categoría" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="76.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Productos" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="20.0" layoutY="258.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Pedidos" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-                  <Separator prefHeight="58.0" prefWidth="186.0" visible="false" />
-                  <MFXButton fx:id="btnLabelUsuario" alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="209.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Perfil" textFill="WHITE">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </MFXButton>
-               </children>
-            </VBox>
-         </children>
-      </AnchorPane>
-      <AnchorPane fx:id="panelAltaUsuario" layoutX="111.0" layoutY="105.0" prefHeight="546.0" prefWidth="800.0" visible="false">
-         <children>
-            <MFXTextField fx:id="nombreUsuario" floatingText="Nombre*" layoutX="68.0" layoutY="42.0" prefHeight="65.0" prefWidth="350.0">
-               <effect>
-                  <ColorAdjust hue="0.56" />
-               </effect>
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </MFXTextField>
-            <MFXTextField fx:id="correoUsuario" floatingText="Correo*" layoutX="68.0" layoutY="147.0" prefHeight="65.0" prefWidth="350.0">
-               <effect>
-                  <ColorAdjust hue="0.56" />
-               </effect>
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </MFXTextField>
-            <MFXButton layoutX="146.0" layoutY="373.0" onAction="#añadirUsuario" prefHeight="56.0" prefWidth="158.0" text="Dar de alta">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </MFXButton>
-            <MFXPasswordField fx:id="passwUsuario" floatingText="Contraseña" layoutX="68.0" layoutY="247.0" prefHeight="65.0" prefWidth="350.0">
-               <effect>
-                  <ColorAdjust hue="0.56" />
-               </effect>
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </MFXPasswordField>
-            <ListView fx:id="listViewEstablecimientos" layoutX="474.0" layoutY="59.0" prefHeight="342.0" prefWidth="262.0" />
-            <Label fx:id="labelEstablecimientos" layoutX="474.0" layoutY="42.0" text="Listado de establecimientos" />
-         </children>
-      </AnchorPane>
       <AnchorPane fx:id="panelInfoUsuario" layoutX="121.0" layoutY="95.0" prefHeight="546.0" prefWidth="800.0" visible="false">
          <children>
             <MFXTextField fx:id="nombreUsuarioInfo" floatMode="DISABLED" layoutX="202.0" layoutY="65.0" prefHeight="66.0" prefWidth="338.0">
@@ -534,7 +460,7 @@
               </columns>
             </TableView>
             <Label layoutX="573.0" layoutY="123.0" text="Seleccione establecimiento" />
-            <MFXButton layoutX="563.0" layoutY="432.0" onAction="#panelAltaProducto" text="Añadir producto">
+            <MFXButton layoutX="564.0" layoutY="432.0" onAction="#panelAltaProducto" text="Añadir producto">
                <font>
                   <Font size="18.0" />
                </font>
@@ -609,7 +535,7 @@
             </AnchorPane>
          </children>
       </AnchorPane>
-      <AnchorPane fx:id="panelPedidos" layoutX="98.0" layoutY="86.0" prefHeight="575.0" prefWidth="830.0">
+      <AnchorPane fx:id="panelPedidos" layoutX="98.0" layoutY="86.0" prefHeight="575.0" prefWidth="830.0" visible="false">
          <children>
             <MFXFilterComboBox fx:id="comboSeleccionarEstablPedidos" layoutX="235.0" layoutY="442.0" onAction="#rellenarPedidos" prefHeight="40.0" prefWidth="180.0" />
             <TableView fx:id="tablaPedidos" layoutX="77.0" layoutY="44.0" prefHeight="350.0" prefWidth="685.0">
@@ -690,6 +616,112 @@
                   </MFXButton>
                </children>
             </AnchorPane>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="panelTrabajadores" layoutX="104.0" layoutY="93.0" prefHeight="546.0" prefWidth="806.0" visible="false">
+         <children>
+            <MFXFilterComboBox fx:id="comboSeleccionarEstablTrabajador" layoutX="555.0" layoutY="152.0" onAction="#rellenarTrabajadores" prefHeight="40.0" prefWidth="180.0" />
+            <TableView fx:id="tablaTrabajadores" layoutX="77.0" layoutY="44.0" prefHeight="295.0" prefWidth="431.0">
+               <columns>
+                  <TableColumn fx:id="columNombreTrabaj" prefWidth="109.59996032714844" text="Nombre" />
+                  <TableColumn fx:id="columCorreoTrabaj" prefWidth="193.60003662109375" text="Correo" />
+                  <TableColumn fx:id="columPasswTrabaj" prefWidth="127.199951171875" text="Contraseña" />
+               </columns>
+            </TableView>
+            <Label layoutX="573.0" layoutY="123.0" text="Seleccione establecimiento" />
+            <MFXButton layoutX="563.0" layoutY="432.0" onAction="#panelAltaTrabajador" text="Alta trabajador">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </MFXButton>
+            <AnchorPane fx:id="panelAltaUsuario" prefHeight="546.0" prefWidth="800.0" style="-fx-background-color: #FFE6C7; -fx-border-color: black;" visible="false">
+               <children>
+                  <MFXTextField fx:id="nombreUsuario" floatingText="Nombre*" layoutX="68.0" layoutY="42.0" prefHeight="65.0" prefWidth="350.0">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXTextField>
+                  <MFXTextField fx:id="correoUsuario" floatingText="Correo*" layoutX="68.0" layoutY="147.0" prefHeight="65.0" prefWidth="350.0">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXTextField>
+                  <MFXButton fx:id="btnAltaTrabajador" layoutX="146.0" layoutY="373.0" onAction="#añadirUsuario" prefHeight="56.0" prefWidth="158.0" text="Dar de alta">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXPasswordField fx:id="passwUsuario" floatingText="Contraseña" layoutX="68.0" layoutY="247.0" prefHeight="65.0" prefWidth="350.0">
+                     <effect>
+                        <ColorAdjust hue="0.56" />
+                     </effect>
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXPasswordField>
+                  <ListView fx:id="listViewEstablecimientos" layoutX="474.0" layoutY="59.0" prefHeight="174.0" prefWidth="262.0" />
+                  <Label fx:id="labelEstablecimientos" layoutX="474.0" layoutY="42.0" text="Establecimientos disponibles" />
+                  <MFXButton fx:id="btnModificarTrabajador" layoutX="132.0" layoutY="373.0" onAction="#actualizarDatosTrabajador" prefHeight="56.0" prefWidth="186.0" text="Guardar cambios" visible="false">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton layoutX="769.0" onAction="#cerrarVentanaTrabajador" prefHeight="31.0" prefWidth="38.0" style="-fx-background-color: red; -fx-border-color: black;" text="X" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="14.0" />
+                     </font>
+                  </MFXButton>
+                  <ListView fx:id="listViewEstablecimientosTrabajador" layoutX="474.0" layoutY="314.0" prefHeight="174.0" prefWidth="262.0" />
+                  <Label fx:id="labelEstablecimientos1" layoutX="474.0" layoutY="288.0" text="Establecimientos del usuario" />
+                  <MFXButton layoutX="474.0" layoutY="235.0" onAction="#añadirEstabl" text="Añadir" />
+                  <MFXButton layoutX="474.0" layoutY="488.0" onAction="#quitarEstabl" text="Quitar" />
+               </children>
+            </AnchorPane>
+         </children>
+      </AnchorPane>
+      <AnchorPane fx:id="panelMenu" layoutX="74.0" layoutY="79.0" prefHeight="582.0" prefWidth="207.0" style="-fx-background-color: #454545;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="79.0">
+         <children>
+            <VBox layoutY="10.0" prefHeight="574.0" prefWidth="207.0" style="-fx-spacing: 20px; -fx-padding: 10px;" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Inicio" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="10.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Nuevo trabajador" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="20.0" layoutY="179.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Nueva categoría" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="76.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Productos" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <MFXButton alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="20.0" layoutY="258.0" prefHeight="63.0" prefWidth="186.0" style="-fx-background-color: #454545;" text="Pedidos" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+                  <Separator prefHeight="58.0" prefWidth="186.0" visible="false" />
+                  <MFXButton fx:id="btnLabelUsuario" alignment="BASELINE_LEFT" buttonType="RAISED" layoutX="10.0" layoutY="209.0" prefHeight="63.0" prefWidth="200.0" style="-fx-background-color: #454545;" text="Perfil" textFill="WHITE">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </MFXButton>
+               </children>
+            </VBox>
          </children>
       </AnchorPane>
    </children>
