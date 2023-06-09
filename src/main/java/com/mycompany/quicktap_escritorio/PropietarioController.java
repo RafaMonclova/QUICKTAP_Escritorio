@@ -1622,11 +1622,33 @@ public class PropietarioController implements Initializable {
 
     @FXML
     public void cerrarVentanaProducto(ActionEvent e) {
+        
+        nombreProducto.setText("");
+        descripcionProducto.setText("");
+        precioProducto.setText("");
+        stockProducto.setText("");
+
+        //Carga la imagen por defecto del producto
+        try {
+            imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
+        } catch (URISyntaxException ex) {
+            ex.printStackTrace();
+        }
+
+        String imagePath = imagenSeleccionada.toURI().toString();
+        Image image = new Image(imagePath);
+
+        imagenProducto.setImage(image);
+        
         panelAltaProducto.setVisible(false);
+        
     }
 
     @FXML
     public void cerrarVentanaTrabajador(ActionEvent e) {
+        nombreUsuario.setText("");
+        correoUsuario.setText("");
+        passwUsuario.setText("");
         panelAltaUsuario.setVisible(false);
     }
 
@@ -1805,24 +1827,9 @@ public class PropietarioController implements Initializable {
                     alert.setHeaderText("Correcto");
                     alert.setContentText("Producto dado de alta.");
                     alert.showAndWait();
-                    nombreProducto.setText("");
-                    descripcionProducto.setText("");
-                    precioProducto.setText("");
-                    stockProducto.setText("");
-
-                    //Carga la imagen por defecto del producto
-                    try {
-                        imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
-                    } catch (URISyntaxException ex) {
-                        ex.printStackTrace();
-                    }
-
-                    String imagePath = imagenSeleccionada.toURI().toString();
-                    Image image = new Image(imagePath);
-
-                    imagenProducto.setImage(image);
-
-                    panelAltaProducto.setVisible(false);
+                    
+                    cerrarVentanaProducto(e);
+                    rellenarProductos(e);
 
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -1894,9 +1901,9 @@ public class PropietarioController implements Initializable {
                     alert.setHeaderText("Correcto");
                     alert.setContentText("Usuario dado de alta.");
                     alert.showAndWait();
-                    nombreUsuario.setText("");
-                    correoUsuario.setText("");
-                    passwUsuario.setText("");
+                    
+                    cerrarVentanaTrabajador(e);
+                    rellenarTrabajadores(e);
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");
@@ -1945,7 +1952,7 @@ public class PropietarioController implements Initializable {
                     respuesta = (boolean) mensajeRespuesta.getData().get(0);
 
                     if (respuesta) {
-                        panelAltaProducto.setVisible(false);
+                        cerrarVentanaProducto(e);
                         rellenarProductos(e);
                         //btnLabelUsuario.setText(nombreUsuarioInfo.getText());
                     }
@@ -1966,6 +1973,22 @@ public class PropietarioController implements Initializable {
                 alert.setHeaderText("Correcto");
                 alert.setContentText("Datos actualizados.");
                 alert.showAndWait();
+                nombreProducto.setText("");
+                descripcionProducto.setText("");
+                precioProducto.setText("");
+                stockProducto.setText("");
+
+                //Carga la imagen por defecto del producto
+                try {
+                    imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
+                } catch (URISyntaxException ex) {
+                    ex.printStackTrace();
+                }
+
+                String imagePath = imagenSeleccionada.toURI().toString();
+                Image image = new Image(imagePath);
+
+                imagenProducto.setImage(image);
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("ERROR");
@@ -2008,7 +2031,7 @@ public class PropietarioController implements Initializable {
                     respuesta = (boolean) mensajeRespuesta.getData().get(0);
 
                     if (respuesta) {
-                        panelAltaUsuario.setVisible(false);
+                        cerrarVentanaTrabajador(e);
                         rellenarTrabajadores(e);
                         //btnLabelUsuario.setText(nombreUsuarioInfo.getText());
                     }
@@ -2029,6 +2052,7 @@ public class PropietarioController implements Initializable {
                 alert.setHeaderText("Correcto");
                 alert.setContentText("Datos actualizados.");
                 alert.showAndWait();
+                
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("ERROR");

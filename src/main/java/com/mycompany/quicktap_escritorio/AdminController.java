@@ -107,7 +107,10 @@ public class AdminController implements Initializable {
     private GridPane panelInicio;
 
     @FXML
-    private MFXTextField coordsEstabl;
+    private MFXTextField latitudEstabl;
+    
+    @FXML
+    private MFXTextField longitudEstabl;
 
     @FXML
     private MFXTextField direccionEstabl;
@@ -214,7 +217,8 @@ public class AdminController implements Initializable {
                     int indice = listViewDirecciones.getSelectionModel().getSelectedIndex();
                     Place p = places.get(indice);
                     direccionEstabl.setText(p.getAddress());
-                    coordsEstabl.setText(p.getLatitude() + "," + p.getLongitude());
+                    latitudEstabl.setText(p.getLatitude()+"");
+                    longitudEstabl.setText(p.getLongitude()+"");
                 } catch (NullPointerException | IndexOutOfBoundsException ex) {
 
                 }
@@ -887,6 +891,7 @@ public class AdminController implements Initializable {
             for (Place place : places) {
 
                 direcciones.add(place.getAddress());
+                
 
             }
 
@@ -903,7 +908,8 @@ public class AdminController implements Initializable {
     @FXML
     public void añadirNuevoEstabl(ActionEvent e) {
 
-        if (nombreEstabl.getText().isEmpty() || direccionEstabl.getText().isEmpty() || coordsEstabl.getText().isEmpty()) {
+        if (nombreEstabl.getText().isEmpty() || direccionEstabl.getText().isEmpty() || latitudEstabl.getText().isEmpty()
+                || longitudEstabl.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Información");
             alert.setHeaderText("ERROR");
@@ -918,7 +924,8 @@ public class AdminController implements Initializable {
 
                     data.add(nombreEstabl.getText());
                     data.add(direccionEstabl.getText());
-                    data.add(coordsEstabl.getText());
+                    data.add(latitudEstabl.getText());
+                    data.add(longitudEstabl.getText());
                     Message peticion = new Message("ESTABLECIMIENTO","INSERTAR", data);
                     boolean respuesta = false;
                     try {
@@ -944,7 +951,8 @@ public class AdminController implements Initializable {
                     alert.showAndWait();
                     nombreEstabl.setText("");
                     direccionEstabl.setText("");
-                    coordsEstabl.setText("");
+                    latitudEstabl.setText("");
+                    longitudEstabl.setText("");
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");

@@ -41,7 +41,7 @@
                   <Font size="18.0" />
                </font>
             </MFXTextField>
-            <MFXTextField fx:id="coordsEstabl" allowEdit="false" floatingText="Coordenadas" layoutX="68.0" layoutY="246.0" prefHeight="66.0" prefWidth="224.0">
+            <MFXTextField fx:id="latitudEstabl" allowEdit="false" floatingText="Latitud" layoutX="68.0" layoutY="240.0" prefHeight="66.0" prefWidth="158.0">
                <effect>
                   <ColorAdjust hue="0.56" />
                </effect>
@@ -56,11 +56,19 @@
                </font>
             </MFXButton>
             <Label layoutX="432.0" layoutY="127.0" text="Direcciones posibles" />
-            <MFXButton layoutX="164.0" layoutY="454.0" onAction="#añadirNuevoEstabl" prefHeight="56.0" prefWidth="158.0" text="Dar de alta">
+            <MFXButton layoutX="164.0" layoutY="412.0" onAction="#añadirNuevoEstabl" prefHeight="56.0" prefWidth="158.0" text="Dar de alta">
                <font>
                   <Font name="System Bold" size="18.0" />
                </font>
             </MFXButton>
+            <MFXTextField fx:id="longitudEstabl" allowEdit="false" floatingText="Longitud" layoutX="259.0" layoutY="240.0" prefHeight="66.0" prefWidth="158.0">
+               <effect>
+                  <ColorAdjust hue="0.56" />
+               </effect>
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </MFXTextField>
          </children>
       </AnchorPane>
       <AnchorPane layoutY="72.0" prefHeight="479.0" prefWidth="94.0" style="-fx-background-color: #454545;" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="72.0">
