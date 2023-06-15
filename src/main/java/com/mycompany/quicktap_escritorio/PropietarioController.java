@@ -4,27 +4,33 @@
  */
 package com.mycompany.quicktap_escritorio;
 
-import com.jfoenix.controls.JFXListView;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXComboBox;
 import io.github.palexdev.materialfx.controls.MFXFilterComboBox;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
+import io.github.palexdev.materialfx.controls.MFXProgressSpinner;
 import io.github.palexdev.materialfx.controls.MFXTextField;
 import io.github.palexdev.materialfx.controls.legacy.MFXLegacyComboBox;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -40,6 +46,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -53,10 +60,9 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import message.Message;
@@ -66,6 +72,7 @@ import se.walkercrou.places.Place;
 import se.walkercrou.places.exception.GooglePlacesException;
 import se.walkercrou.places.exception.NoResultsFoundException;
 import utilidades.FileUtils;
+import utilidades.SHA;
 
 /**
  * FXML Controller class
@@ -75,6 +82,7 @@ import utilidades.FileUtils;
 public class PropietarioController implements Initializable {
 
     FileChooser fileChooser = new FileChooser();
+
     File imagenSeleccionada;
 
     @FXML
@@ -105,7 +113,7 @@ public class PropietarioController implements Initializable {
     private MFXButton btnSalir;
 
     @FXML
-    private MFXButton btnLabelUsuario;
+    private Button btnLabelUsuario;
 
     @FXML
     private Label labelVentanaActual;
@@ -259,9 +267,6 @@ public class PropietarioController implements Initializable {
     private String productoCargado;
 
     @FXML
-    private TableView tablaPedidos;
-
-    @FXML
     private TableColumn<List<Object>, Object> columPedido;
 
     @FXML
@@ -277,16 +282,19 @@ public class PropietarioController implements Initializable {
     private TableColumn<List<Object>, Object> columEstado;
 
     @FXML
-    private MFXFilterComboBox<String> comboSeleccionarEstablPedidos;
+    private TableColumn<List<Object>, Object> columCategorias;
 
     @FXML
-    private AnchorPane panelPedidos;
+    private MFXFilterComboBox<String> comboSeleccionarEstablPedidos;
 
     @FXML
     private MFXFilterComboBox<String> comboSeleccionarEstablTrabajador;
 
     @FXML
     private AnchorPane panelTrabajadores;
+
+    @FXML
+    private AnchorPane panelModificarCategoria;
 
     @FXML
     private TableView tablaTrabajadores;
@@ -297,13 +305,17 @@ public class PropietarioController implements Initializable {
     @FXML
     private TableColumn<List<Object>, Object> columCorreoTrabaj;
 
-    @FXML
-    private TableColumn<List<Object>, Object> columPasswTrabaj;
-
+    //@FXML
+    //private TableColumn<List<Object>, Object> columPasswTrabaj;
     private String trabajadorCargado;
+    private String passwTrabajadorModificar; //Contraseña temporal trabajador
+    private String categoriaCargada;
 
     @FXML
     private ListView<String> listViewEstablecimientosTrabajador;
+
+    @FXML
+    private Label labelAltaProducto;
 
     @FXML
     private MFXButton btnAltaProducto;
@@ -317,11 +329,67 @@ public class PropietarioController implements Initializable {
     @FXML
     private MFXButton btnModificarTrabajador;
 
+    @FXML
+    private MFXTextField campoBuscarProducto;
+
+    @FXML
+    private MFXFilterComboBox<String> comboFiltroProducto;
+
+    @FXML
+    private MFXTextField campoBuscarTrabajador;
+
+    @FXML
+    private MFXFilterComboBox<String> comboFiltroTrabajador;
+
+    private ArrayList<ArrayList<Object>> productos;
+    private ArrayList<ArrayList<Object>> trabajadores;
+
+    @FXML
+    private ListView<String> listViewCategoriasDisponibles;
+
+    @FXML
+    private MFXTextField nombreCategoriaModificar;
+
+    @FXML
+    private MFXTextField descripcionCategoriaModificar;
+
+    @FXML
+    private MFXFilterComboBox<String> comboSeleccionarEstablCategoria;
+
+    @FXML
+    private MFXProgressSpinner spinner;
+
+    //Menú contextual al pulsar click derecho sobre un producto, trabajador o categoría
     private ContextMenu contextMenuProductos = new ContextMenu();
     private ContextMenu contextMenuTrabajadores = new ContextMenu();
+    private ContextMenu contextMenuCategorias = new ContextMenu();
+
+    private double xOffset = 0;
+    private double yOffset = 0;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
+        //Crea un filtro para archivos PNG, JPG y JPEG
+        FileChooser.ExtensionFilter imageFilter = new FileChooser.ExtensionFilter(
+                "Archivos de imagen", "*.png", "*.jpg", "*.jpeg");
+        fileChooser.getExtensionFilters().add(imageFilter);
+
+        //Rellena los combobox de los filtros
+        comboFiltroProducto.getItems().addAll("Nombre", "Descripción", "Precio", "Stock", "Categorías");
+        comboFiltroTrabajador.getItems().addAll("Nombre", "Correo");
+
+        spinner.setVisible(false); //Spinner de carga
+
+        //Añade el evento drag and drop a los paneles de producto, categoría y usuario
+        panelAltaProducto.setOnMousePressed(this::onDragPanePressed);
+        panelAltaProducto.setOnMouseDragged(this::onDragPaneDragged);
+
+        panelAltaUsuario.setOnMousePressed(this::onDragPanePressed);
+        panelAltaUsuario.setOnMouseDragged(this::onDragPaneDragged);
+
+        panelModificarCategoria.setOnMousePressed(this::onDragPanePressed);
+        panelModificarCategoria.setOnMouseDragged(this::onDragPaneDragged);
 
         //TABLA PRODUCTOS
         MenuItem editarProducto = new MenuItem("Editar");
@@ -339,7 +407,7 @@ public class PropietarioController implements Initializable {
                 }
             }
         });
-        
+
         MenuItem borrarProducto = new MenuItem("Borrar");
         borrarProducto.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -350,11 +418,11 @@ public class PropietarioController implements Initializable {
                 // Verificar si hay un usuario seleccionado
                 if (filaSeleccionada != null) {
                     productoCargado = (String) filaSeleccionada.get(0);
-                    borrarProducto(productoCargado,comboSeleccionarEstablListado.getValue());
+                    borrarProducto(productoCargado, comboSeleccionarEstablListado.getValue());
                 }
             }
         });
-        
+
         contextMenuProductos.getItems().addAll(editarProducto, borrarProducto);
 
         tablaProductos.setContextMenu(contextMenuProductos);
@@ -368,7 +436,7 @@ public class PropietarioController implements Initializable {
             });
             return row;
         });
-        
+
         //TABLA TRABAJADORES
         MenuItem editarTrabajador = new MenuItem("Editar");
         editarTrabajador.setOnAction(new EventHandler<ActionEvent>() {
@@ -385,7 +453,7 @@ public class PropietarioController implements Initializable {
                 }
             }
         });
-        
+
         MenuItem borrarTrabajador = new MenuItem("Borrar");
         borrarTrabajador.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -400,7 +468,7 @@ public class PropietarioController implements Initializable {
                 }
             }
         });
-        
+
         contextMenuTrabajadores.getItems().addAll(editarTrabajador, borrarTrabajador);
 
         tablaTrabajadores.setContextMenu(contextMenuTrabajadores);
@@ -415,65 +483,127 @@ public class PropietarioController implements Initializable {
             return row;
         });
 
-        
-        
-        btnMenu.setOnMouseClicked(event -> togglePanelLateral(panelMenu));
+        //LISTA CATEGORÍAS
+        MenuItem modificarCategoria = new MenuItem("Editar");
+        modificarCategoria.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                // Obtener la fila seleccionada
+                String filaSeleccionada = listViewCategoriasDisponibles.getSelectionModel().getSelectedItem();
 
-        // Agrega un evento al hacer clic en una fila
-//        tablaProductos.setOnMouseClicked(new EventHandler<MouseEvent>() {
-//            @Override
-//            public void handle(MouseEvent event) {
-//                if (event.getClickCount() == 1) { // Si se hizo un solo clic
-//                    // Obtiene la fila seleccionada
-//                    ArrayList<Object> filaSeleccionada = (ArrayList<Object>) tablaProductos.getSelectionModel().getSelectedItem();
-//                    if (filaSeleccionada != null) {
-//                        System.out.println(filaSeleccionada.get(0));
-//                        System.out.println(filaSeleccionada.get(1));
-//                        System.out.println(filaSeleccionada.get(2));
-//                        System.out.println(filaSeleccionada.get(3));
-//
-//                        //Carga los roles y establecimientos para ser editados
-//                        productoCargado = (String) filaSeleccionada.get(0);
-//                        modificarProducto(productoCargado);
-//
-//                    }
-//                }
-//            }
-//        });
+                // Verificar si hay una categoría seleccionada
+                if (filaSeleccionada != null) {
+                    categoriaCargada = filaSeleccionada;
+                    modificarCategoria(categoriaCargada);
+                }
+            }
+        });
+        MenuItem borrarCategoria = new MenuItem("Borrar");
+        borrarCategoria.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                // Obtener la fila seleccionada
+                String filaSeleccionada = listViewCategoriasDisponibles.getSelectionModel().getSelectedItem();
 
-//        tablaTrabajadores.setOnMouseClicked(new EventHandler<MouseEvent>() {
-//            @Override
-//            public void handle(MouseEvent event) {
-//                if (event.getClickCount() == 1) { // Si se hizo un solo clic
-//                    // Obtiene la fila seleccionada
-//                    ArrayList<Object> filaSeleccionada = (ArrayList<Object>) tablaTrabajadores.getSelectionModel().getSelectedItem();
-//                    if (filaSeleccionada != null) {
-//
-//                        //Carga los roles y establecimientos para ser editados
-//                        trabajadorCargado = (String) filaSeleccionada.get(0);
-//                        modificarTrabajador(trabajadorCargado);
-//
-//                    }
-//                }
-//            }
-//        });
+                // Verificar si hay una categoría seleccionada
+                if (filaSeleccionada != null) {
+                    categoriaCargada = filaSeleccionada;
+                    borrarCategoria(categoriaCargada, comboSeleccionarEstablCategoria.getValue());
+                }
+            }
+        });
 
-        actualizarDashboard();
+        contextMenuCategorias.getItems().addAll(modificarCategoria, borrarCategoria);
+
+        listViewCategoriasDisponibles.setContextMenu(contextMenuTrabajadores);
+
+        listViewCategoriasDisponibles.setOnContextMenuRequested(event -> {
+            contextMenuCategorias.show(listViewCategoriasDisponibles, event.getScreenX(), event.getScreenY());
+            event.consume();
+        });
+
+        btnMenu.setOnMouseClicked(event -> togglePanelLateral(panelMenu)); //Habilita el panel lateral
+
+        actualizarDashboard(); //Actualiza el dashboard al inicio
+
+        campoBuscarProducto.textProperty().addListener((observable, oldValue, newValue) -> {
+
+            buscarProducto(newValue);
+
+        });
+
+        campoBuscarTrabajador.textProperty().addListener((observable, oldValue, newValue) -> {
+
+            buscarTrabajador(newValue);
+
+        });
 
     }
 
+    /**
+     * Evento al hacer click sobre un panel
+     *
+     * @param event Evento
+     */
+    @FXML
+    private void onDragPanePressed(MouseEvent event) {
+        // Guardar la posición inicial del ratón cuando se presiona el botón
+        xOffset = event.getSceneX();
+        yOffset = event.getSceneY();
+    }
+
+    /**
+     * Evento para arrastrar el panel en la ventana
+     *
+     * @param event Evento
+     */
+    @FXML
+    private void onDragPaneDragged(MouseEvent event) {
+        //Calcula la nueva posición del AnchorPane mientras se arrastra
+        double newX = event.getSceneX() - xOffset;
+        double newY = event.getSceneY() - yOffset;
+
+        //Obtiene la ventana principal o el contenedor padre del AnchorPane
+        //y ajustar los límites
+        panelAltaProducto.setLayoutX(newX);
+        panelAltaProducto.setLayoutY(newY);
+
+        panelAltaUsuario.setLayoutX(newX);
+        panelAltaUsuario.setLayoutY(newY);
+
+        panelModificarCategoria.setLayoutX(newX);
+        panelModificarCategoria.setLayoutY(newY);
+    }
+
+    /**
+     * Carga una imagen seleccionada en el filechooser, en el atributo imagen, y
+     * la establece como imagen del producto
+     */
     @FXML
     public void cargarImagen() {
 
         imagenSeleccionada = fileChooser.showOpenDialog(new Stage());
 
+        // Si no se selecciona una imagen, se utiliza una por defecto
         if (imagenSeleccionada == null) {
-            try {
-                imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
-            } catch (URISyntaxException ex) {
-                ex.printStackTrace();
+            InputStream defaultImageStream = getClass().getResourceAsStream("/no-image.png");
+            if (defaultImageStream != null) {
+                try {
+                    // Crear un archivo temporal para la imagen por defecto
+                    File tempFile = File.createTempFile("default-image", ".png");
+                    tempFile.deleteOnExit();
+
+                    // Copiar el contenido del flujo de entrada al archivo temporal
+                    Files.copy(defaultImageStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                    // Utilizar el archivo temporal como imagen por defecto
+                    imagenSeleccionada = tempFile;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
+
         String imagePath = imagenSeleccionada.toURI().toString();
         Image image = new Image(imagePath);
 
@@ -481,23 +611,31 @@ public class PropietarioController implements Initializable {
 
     }
 
-    //Establece el nombre del usuario logeado
+    /**
+     * Establece el nombre del usuario logeado
+     *
+     * @param usuario El usuario que logea
+     */
     public void setUsuario(String usuario) {
 
         btnLabelUsuario.setText(usuario);
 
     }
 
-    // Método para animar la aparición/desaparición del panel lateral
+    /**
+     * Método para animar la aparición/desaparición del panel lateral
+     *
+     * @param panelLateral El panel lateral
+     */
     private void togglePanelLateral(AnchorPane panelLateral) {
         TranslateTransition transicion = new TranslateTransition(Duration.seconds(0.3), panelLateral);
         if (panelLateral.isVisible()) {
-            // Si el panel lateral está visible, ocultarlo
+            //Si el panel lateral está visible, ocultarlo
             transicion.setToX(-panelLateral.getWidth());
             transicion.setOnFinished(event -> panelLateral.setVisible(false));
             disableButtons(false);
         } else {
-            // Si el panel lateral está oculto, mostrarlo
+            //Si el panel lateral está oculto, mostrarlo
             panelLateral.setVisible(true);
             transicion.setToX(0);
             disableButtons(true);
@@ -505,24 +643,27 @@ public class PropietarioController implements Initializable {
         transicion.play();
     }
 
-    //Activa o desactiva los botones del panel lateral
+    /**
+     * Activa o desactiva los botones del panel lateral
+     *
+     * @param activado Indicador para activar o desactivar los botones del panel
+     */
     private void disableButtons(boolean activado) {
-        if (activado) {
-            btnSalir.setDisable(true);
-            btnInfoUsuario.setDisable(true);
-            btnAñadirProducto.setDisable(true);
-            btnAñadirTrabajador.setDisable(true);
-            btnHome.setDisable(true);
-        } else {
-            btnSalir.setDisable(false);
-            btnInfoUsuario.setDisable(false);
-            btnAñadirProducto.setDisable(false);
-            btnAñadirTrabajador.setDisable(false);
-            btnHome.setDisable(false);
-        }
+
+        btnSalir.setDisable(activado);
+        btnInfoUsuario.setDisable(activado);
+        btnAñadirProducto.setDisable(activado);
+        btnAñadirTrabajador.setDisable(activado);
+        btnHome.setDisable(activado);
+        btnAltaCategoria.setDisable(activado);
 
     }
 
+    /**
+     * Habilita el panel de inicio y actualiza el dashboard
+     *
+     * @param e Evento
+     */
     @FXML
     private void panelInicio(ActionEvent e) {
         labelVentanaActual.setText("Inicio");
@@ -531,19 +672,21 @@ public class PropietarioController implements Initializable {
         panelTrabajadores.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
-        panelPedidos.setVisible(false);
 
         actualizarDashboard();
 
     }
 
+    /**
+     * Actualiza el dashboard con los datos del servidor
+     */
     public void actualizarDashboard() {
         //Obtiene del servidor los datos a mostrar en el panel de inicio
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
             @Override
             protected ArrayList<Object> call() throws Exception {
                 ArrayList<Object> data = new ArrayList<Object>();
-                data.add(btnLabelUsuario.getText());
+
                 Message peticion = new Message("SERVIDOR", "DATOS_ESTABL", data);
                 ArrayList<Object> listaDatos = new ArrayList<Object>();
                 try {
@@ -559,10 +702,16 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<Object> listaDatos = task.getValue();
 
-            //Establece los datos obtenidos del servidor en los paneles
+            //Establece los datos obtenidos del servidor en los paneles flotantes
             db_cajaHoy.setText((double) listaDatos.get(0) + "");
 
             db_trabajadoresOn.setText((int) listaDatos.get(1) + "");
@@ -573,12 +722,19 @@ public class PropietarioController implements Initializable {
             db_totalPedidos.setText((long) listaDatos.get(4) + "");
             db_pedidosFin.setText((long) listaDatos.get(5) + "");
             db_pedidosPen.setText((long) listaDatos.get(6) + "");
+
+            spinner.setVisible(false);
         });
 
         Thread thread = new Thread(task);
         thread.start();
     }
 
+    /**
+     * Abre la ventana con la caja generada en cada establecimiento
+     *
+     * @param e Evento
+     */
     @FXML
     public void verCajaEstablecimientos(ActionEvent e) {
 
@@ -598,6 +754,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Abre la ventana para ver qué trabajadores están conectados
+     *
+     * @param e
+     */
     @FXML
     public void verTrabajadoresConectados(ActionEvent e) {
 
@@ -617,6 +778,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Panel para ver el listado de productos por establecimiento
+     *
+     * @param e Evento
+     */
     @FXML
     private void panelVerProducto(ActionEvent e) {
         labelVentanaActual.setText("Listado de producto");
@@ -625,7 +791,7 @@ public class PropietarioController implements Initializable {
         panelTrabajadores.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
-        panelPedidos.setVisible(false);
+        comboFiltroProducto.setValue(comboFiltroProducto.getItems().get(0));
 
         //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -650,14 +816,20 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<String> establUsuario = task.getValue();
 
             //Carga en el combobox los establecimientos del usuario logeado
             comboSeleccionarEstablListado.getItems().clear();
             comboSeleccionarEstablListado.getItems().addAll(establUsuario);
-            //comboSeleccionarEstablListado.setValue(establUsuario.get(0));
-            //new Thread(task2).start();
+
+            spinner.setVisible(false);
 
         });
 
@@ -670,6 +842,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Panel emergente para dar de alta un nuevo producto
+     *
+     * @param e Evento
+     */
     @FXML
     private void panelAltaProducto(ActionEvent e) {
         panelAltaProducto.setVisible(true);
@@ -678,13 +855,31 @@ public class PropietarioController implements Initializable {
         btnAltaProducto.setVisible(true);
         btnModificarProducto.setVisible(false);
         comboSeleccionarEstabl.setVisible(true);
+        labelAltaProducto.setVisible(true);
 
         //Carga la imagen por defecto del producto
-        try {
-            imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
-        } catch (URISyntaxException ex) {
-            ex.printStackTrace();
+        //imagenSeleccionada = new File(getClass().getClassLoader().getResource("/no-image.png").toExternalForm());
+        InputStream defaultImageStream = getClass().getResourceAsStream("/no-image.png");
+        if (defaultImageStream != null) {
+            try {
+                // Crear un archivo temporal para la imagen por defecto
+                File tempFile = File.createTempFile("default-image", ".png");
+                tempFile.deleteOnExit();
+
+                // Copiar el contenido del flujo de entrada al archivo temporal
+                Files.copy(defaultImageStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                // Utilizar el archivo temporal como imagen por defecto
+                imagenSeleccionada = tempFile;
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
+
+        String imagePath = imagenSeleccionada.toURI().toString();
+        Image image = new Image(imagePath);
+
+        imagenProducto.setImage(image);
 
         //Carga los establecimientos del usuario, para obtener las categorías de cada uno
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -709,12 +904,20 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<String> establUsuario = task.getValue();
 
             comboSeleccionarEstabl.getItems().clear();
             comboSeleccionarEstabl.getItems().addAll(establUsuario);
-            comboSeleccionarEstabl.setValue(establUsuario.get(0));
+            //comboSeleccionarEstabl.setValue(establUsuario.get(0));
+
+            spinner.setVisible(false);
         });
 
         Thread thread = new Thread(task);
@@ -722,55 +925,12 @@ public class PropietarioController implements Initializable {
 
     }
 
-    @FXML
-    private void panelPedidos(ActionEvent e) {
-        labelVentanaActual.setText("Listado de pedidos");
-        panelPedidos.setVisible(true);
-        panelVerProducto.setVisible(false);
-        panelInicio.setVisible(false);
-        panelTrabajadores.setVisible(false);
-        panelInfoUsuario.setVisible(false);
-        panelAltaCategoria.setVisible(false);
-
-        //Carga la información del usuario (en este caso, sus establecimientos)
-        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
-            @Override
-            protected ArrayList<String> call() throws Exception {
-                ArrayList<Object> data = new ArrayList<Object>();
-                data.add(btnLabelUsuario.getText());
-                Message peticion = new Message("USUARIO", "GET_DATOS_USUARIO", data);
-
-                ArrayList<String> establUsuario = new ArrayList<String>();
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-
-                    //Obtiene los establecimientos
-                    establUsuario = (ArrayList<String>) mensajeRespuesta.getData().get(4);
-
-                } catch (IOException ex) {
-                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return establUsuario;
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            ArrayList<String> establUsuario = task.getValue();
-
-            //Carga en el combobox los establecimientos del usuario logeado
-            comboSeleccionarEstablPedidos.getItems().clear();
-            comboSeleccionarEstablPedidos.getItems().addAll(establUsuario);
-            //comboSeleccionarEstablListado.setValue(establUsuario.get(0));
-            //new Thread(task2).start();
-
-        });
-
-        Thread thread = new Thread(task);
-        thread.start();
-
-    }
-
+    /**
+     * Rellena el listview de categorias, dependiendo del establecimiento
+     * seleccionado
+     *
+     * @param e Evento
+     */
     @FXML
     public void rellenarCategorias(ActionEvent e) {
 
@@ -799,12 +959,20 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<String> categoriasEstabl = task.getValue();
 
             listViewCategorias.getItems().clear();
             listViewCategSeleccionadas.getItems().clear();
             listViewCategorias.getItems().addAll(categoriasEstabl);
+
+            spinner.setVisible(false);
         });
 
         Thread thread = new Thread(task);
@@ -812,6 +980,59 @@ public class PropietarioController implements Initializable {
 
     }
 
+    @FXML
+    public void rellenarCategoriasAlta(ActionEvent e) {
+
+        //Envía el establecimiento al servidor y recibe sus categorías asociadas
+        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+            @Override
+            protected ArrayList<String> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                data.add(comboSeleccionarEstablCategoria.getValue());
+                Message peticion = new Message("CATEGORIA", "GET_CATEGORIAS", data);
+
+                ArrayList<String> categoriasEstabl = new ArrayList<String>();
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+
+                    for (Object o : mensajeRespuesta.getData()) {
+                        categoriasEstabl.add((String) o);
+                    }
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return categoriasEstabl;
+            }
+        };
+
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> categoriasEstabl = task.getValue();
+
+            listViewCategoriasDisponibles.getItems().clear();
+            listViewCategoriasDisponibles.getItems().addAll(categoriasEstabl);
+
+            spinner.setVisible(false);
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
+    /**
+     * Rellena la tabla de productos del establecimiento seleccionado
+     *
+     * @param e Evento
+     */
     @FXML
     public void rellenarProductos(ActionEvent e) {
 
@@ -842,8 +1063,14 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
-            ArrayList<ArrayList<Object>> productos = task.getValue();
+            productos = task.getValue();
 
             // Agregar las columnas a la tabla
             columNombreProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
@@ -870,147 +1097,16 @@ public class PropietarioController implements Initializable {
                 }
             });
 
-            // Asignar las filas a la tabla
-            tablaProductos.setItems(FXCollections.observableArrayList(productos));
-        });
-
-        Thread thread = new Thread(task);
-        thread.start();
-
-    }
-
-    @FXML
-    public void rellenarPedidos(ActionEvent e) {
-
-        //Envía el establecimiento al servidor y recibe sus pedidos asociados
-        Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
-            @Override
-            protected ArrayList<ArrayList<Object>> call() throws Exception {
-                ArrayList<Object> data = new ArrayList<Object>();
-
-                data.add(comboSeleccionarEstablPedidos.getValue());
-                Message peticion = new Message("PEDIDO", "GET_PEDIDOS", data);
-
-                ArrayList<ArrayList<Object>> pedidos = new ArrayList<>();
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-
-                    ArrayList<Object> datosRecibidos = (ArrayList<Object>) mensajeRespuesta.getData();
-
-                    for (Object listado : datosRecibidos) {
-                        pedidos.add((ArrayList<Object>) listado);
-                    }
-
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-                return pedidos;
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            ArrayList<ArrayList<Object>> pedidos = task.getValue();
-
-            // Agregar las columnas a la tabla
-            columPedido.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
+            columCategorias.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
                 public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(0));
-                }
-            });
-
-            columCliente.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(1));
-                }
-            });
-
-            columProducto.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(2));
-                }
-            });
-
-            columCantidad.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(3));
-                }
-            });
-
-            columEstado.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(4));
-                }
-            });
-
-            // Asignar las filas a la tabla
-            tablaPedidos.setItems(FXCollections.observableArrayList(pedidos));
-        });
-
-        Thread thread = new Thread(task);
-        thread.start();
-
-    }
-
-    public void rellenarProductos() {
-
-        //Envía el establecimiento al servidor y recibe sus categorías asociadas
-        Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
-            @Override
-            protected ArrayList<ArrayList<Object>> call() throws Exception {
-                ArrayList<Object> data = new ArrayList<Object>();
-
-                data.add(comboSeleccionarEstablListado.getValue());
-                Message peticion = new Message("PRODUCTO", "GET_PRODUCTOS", data);
-
-                ArrayList<ArrayList<Object>> productos = new ArrayList<>();
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-
-                    ArrayList<Object> datosRecibidos = (ArrayList<Object>) mensajeRespuesta.getData();
-
-                    for (Object listado : datosRecibidos) {
-                        productos.add((ArrayList<Object>) listado);
-                    }
-
-                } catch (IOException ex) {
-                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return productos;
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            ArrayList<ArrayList<Object>> productos = task.getValue();
-
-            // Agregar las columnas a la tabla
-            columNombreProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(0));
-                }
-            });
-
-            columDescripcionProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(1));
-                }
-            });
-
-            columPrecioProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(2));
-                }
-            });
-
-            columStockProd.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
-                public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
-                    return new SimpleObjectProperty<Object>(c.getValue().get(3));
+                    return new SimpleObjectProperty<Object>(c.getValue().get(5));
                 }
             });
 
             // Asignar las filas a la tabla
             tablaProductos.setItems(FXCollections.observableArrayList(productos));
+
+            spinner.setVisible(false);
         });
 
         Thread thread = new Thread(task);
@@ -1018,6 +1114,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Rellena la tabla de trabajadores de un establecimiento seleccionado
+     *
+     * @param e Evento
+     */
     @FXML
     public void rellenarTrabajadores(ActionEvent e) {
 
@@ -1048,8 +1149,14 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
-            ArrayList<ArrayList<Object>> trabajadores = task.getValue();
+            trabajadores = task.getValue();
 
             // Agregar las columnas a la tabla
             columNombreTrabaj.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
@@ -1064,14 +1171,17 @@ public class PropietarioController implements Initializable {
                 }
             });
 
+            /*
             columPasswTrabaj.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<List<Object>, Object>, ObservableValue<Object>>() {
                 public ObservableValue<Object> call(TableColumn.CellDataFeatures<List<Object>, Object> c) {
                     return new SimpleObjectProperty<Object>(c.getValue().get(2));
                 }
             });
-
+             */
             // Asignar las filas a la tabla
             tablaTrabajadores.setItems(FXCollections.observableArrayList(trabajadores));
+
+            spinner.setVisible(false);
         });
 
         Thread thread = new Thread(task);
@@ -1079,6 +1189,12 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Habilita el panel para dar de alta categorías nuevas en un
+     * establecimiento
+     *
+     * @param e
+     */
     @FXML
     private void panelAltaCategoria(ActionEvent e) {
         labelVentanaActual.setText("Nueva categoría");
@@ -1087,7 +1203,6 @@ public class PropietarioController implements Initializable {
         panelInicio.setVisible(false);
         panelTrabajadores.setVisible(false);
         panelInfoUsuario.setVisible(false);
-        panelPedidos.setVisible(false);
 
         //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -1112,12 +1227,23 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<String> establUsuario = task.getValue();
 
             listViewEstablCategoria.getItems().clear();
             listViewCategSeleccionadas.getItems().clear();
             listViewEstablCategoria.getItems().addAll(establUsuario);
+
+            comboSeleccionarEstablCategoria.getItems().clear();
+            comboSeleccionarEstablCategoria.getItems().addAll(establUsuario);
+
+            spinner.setVisible(false);
         });
 
         Thread thread = new Thread(task);
@@ -1125,6 +1251,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Habilita el panel para ver los trabajadores por establecimiento
+     *
+     * @param e Evento
+     */
     @FXML
     private void panelTrabajadores(ActionEvent e) {
         labelVentanaActual.setText("Listado de trabajadores");
@@ -1133,7 +1264,7 @@ public class PropietarioController implements Initializable {
         panelInicio.setVisible(false);
         panelInfoUsuario.setVisible(false);
         panelAltaCategoria.setVisible(false);
-        panelPedidos.setVisible(false);
+        comboFiltroTrabajador.setValue(comboFiltroTrabajador.getItems().get(0));
 
         //Carga la información del usuario (en este caso, sus establecimientos)
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -1158,14 +1289,20 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<String> establUsuario = task.getValue();
 
             //Carga en el combobox los establecimientos del usuario logeado
             comboSeleccionarEstablTrabajador.getItems().clear();
             comboSeleccionarEstablTrabajador.getItems().addAll(establUsuario);
-            //comboSeleccionarEstablListado.setValue(establUsuario.get(0));
-            //new Thread(task2).start();
+
+            spinner.setVisible(false);
 
         });
 
@@ -1174,6 +1311,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Panel emergente para dar de alta un nuevo trabajador
+     *
+     * @param e Evento
+     */
     @FXML
     private void panelAltaTrabajador(ActionEvent e) {
 
@@ -1182,7 +1324,6 @@ public class PropietarioController implements Initializable {
         //Abre la ventana para dar de alta un nuevo producto
         btnAltaTrabajador.setVisible(true);
         btnModificarTrabajador.setVisible(false);
-        //comboSeleccionarEstabl.setVisible(true);
 
         //Carga los establecimientos disponibles
         Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
@@ -1205,10 +1346,20 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<String> listaEstabl = task.getValue();
             listViewEstablecimientos.getItems().clear();
             listViewEstablecimientos.getItems().addAll(listaEstabl);
+            listViewEstablecimientosTrabajador.getItems().clear();
+
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
@@ -1216,6 +1367,12 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Abre el panel emergente para modificar los datos de un trabajador
+     *
+     * @param trabajador El nombre del trabajador a modificar, que se envía al
+     * servidor para obtener sus datos
+     */
     public void modificarTrabajador(String trabajador) {
 
         //Abre la ventana usada para dar de alta un nuevo trabajador, usada también para modificar sus datos
@@ -1249,22 +1406,11 @@ public class PropietarioController implements Initializable {
                     Message mensajeRespuestaCategorias = (Message) App.in.readObject();
 
                     datosTrabajador = new ArrayList<>(mensajeRespuesta.getData());
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(0));
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(1));
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(2));
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(3));
-//                    datosProducto.add((byte[]) mensajeRespuesta.getData().get(4));
-                    //datosProducto.add((ArrayList<String>) mensajeRespuesta.getData().get(5));
-
-                    System.out.println("Tamaño:" + datosTrabajador.size());
-                    //System.out.println(datosTrabajador);
 
                     ArrayList<String> establecimientosDisponibles = (ArrayList<String>) mensajeRespuestaCategorias.getData().get(0);
 
-                    //System.out.println(establecimientosDisponibles);
                     datosTrabajador.add(establecimientosDisponibles);
 
-                    //System.out.println(datosTrabajador);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -1272,13 +1418,19 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<Object> datosTrabajador = task.getValue();
 
-            //System.out.println(datosTrabajador);
             nombreUsuario.setText((String) datosTrabajador.get(0));
             correoUsuario.setText((String) datosTrabajador.get(1));
-            passwUsuario.setText((String) datosTrabajador.get(2));
+            passwTrabajadorModificar = (String) datosTrabajador.get(2); //Se guarda la contraseña original del usuario
+            //passwUsuario.setText((String) datosTrabajador.get(2));
 
             ArrayList<String> establecimientos = (ArrayList<String>) datosTrabajador.get(4);
             ArrayList<String> establecimientosDisponibles = (ArrayList<String>) datosTrabajador.get(5);
@@ -1288,6 +1440,8 @@ public class PropietarioController implements Initializable {
             listViewEstablecimientos.getItems().clear();
             listViewEstablecimientos.getItems().addAll(establecimientosDisponibles);
 
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
@@ -1295,6 +1449,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Habilita el panel para ver los datos del usuario logeado
+     *
+     * @param e Evento
+     */
     @FXML
     private void panelInfoUsuario(ActionEvent e) {
         labelVentanaActual.setText("Perfil de Usuario");
@@ -1303,7 +1462,6 @@ public class PropietarioController implements Initializable {
         panelVerProducto.setVisible(false);
         panelInicio.setVisible(false);
         panelAltaCategoria.setVisible(false);
-        panelPedidos.setVisible(false);
 
         //Carga la información del usuario
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
@@ -1337,15 +1495,21 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             ArrayList<Object> datosUsuario = task.getValue();
             nombreUsuarioInfo.setText((String) datosUsuario.get(0));
             correoUsuarioInfo.setText((String) datosUsuario.get(1));
-            passwUsuarioInfo.setText((String) datosUsuario.get(2));
-            rolesUsuarioInfo.getItems().clear();
-            rolesUsuarioInfo.getItems().addAll((ArrayList<String>) datosUsuario.get(3));
-            establUsuarioInfo.getItems().clear();
-            establUsuarioInfo.getItems().addAll((ArrayList<String>) datosUsuario.get(4));
+            //passwUsuarioModificar = (String) datosUsuario.get(2); //Se guarda la contraseña original del usuario
+            //passwUsuarioInfo.setText((String) datosUsuario.get(2));
+
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
@@ -1353,6 +1517,12 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Modifica un producto de un establecimiento
+     *
+     * @param producto El nombre del producto, enviado al servidor junto con el
+     * establecimiento seleccionado
+     */
     public void modificarProducto(String producto) {
 
         //Abre la ventana usada para dar de alta un nuevo producto, usada también para modificar sus datos
@@ -1360,6 +1530,7 @@ public class PropietarioController implements Initializable {
         btnAltaProducto.setVisible(false);
         btnModificarProducto.setVisible(true);
         comboSeleccionarEstabl.setVisible(false);
+        labelAltaProducto.setVisible(false);
 
         //Carga la información del producto
         Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
@@ -1389,21 +1560,11 @@ public class PropietarioController implements Initializable {
                     Message mensajeRespuestaCategorias = (Message) App.in.readObject();
 
                     datosProducto = new ArrayList<>(mensajeRespuesta.getData());
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(0));
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(1));
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(2));
-//                    datosProducto.add((String) mensajeRespuesta.getData().get(3));
-//                    datosProducto.add((byte[]) mensajeRespuesta.getData().get(4));
-                    //datosProducto.add((ArrayList<String>) mensajeRespuesta.getData().get(5));
-
-                    System.out.println("Tamaño:" + datosProducto.size());
 
                     //Añade a la lista devuelta las categorías disponibles
                     for (Object o : mensajeRespuestaCategorias.getData()) {
                         categoriasDisponibles.add((String) o);
                     }
-
-                    System.out.println(categoriasDisponibles);
 
                     datosProducto.add(categoriasDisponibles);
 
@@ -1413,6 +1574,12 @@ public class PropietarioController implements Initializable {
                 return datosProducto;
             }
         };
+
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
 
         task.setOnSucceeded(event -> {
             ArrayList<Object> datosProducto = task.getValue();
@@ -1437,6 +1604,8 @@ public class PropietarioController implements Initializable {
             listViewCategSeleccionadas.getItems().clear();
             listViewCategSeleccionadas.getItems().addAll(categorias);
 
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
@@ -1444,117 +1613,61 @@ public class PropietarioController implements Initializable {
 
     }
 
-    @FXML
-    public void editarRoles(ActionEvent e) {
+    /**
+     * Modifica una categoría de un establecimiento
+     *
+     * @param categoria La categoría a modificar
+     */
+    public void modificarCategoria(String categoria) {
 
-        if (panelEditarRoles.isVisible()) {
-            panelEditarRoles.setVisible(false);
-        } else {
-            panelEditarRoles.setVisible(true);
-        }
+        //Abre la ventana de modificar categoria
+        panelModificarCategoria.setVisible(true);
 
-        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
+        //Carga la información de la categoría
+        Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
             @Override
-            protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ROL", "GET_ROLES", new ArrayList<Object>());
-                ArrayList<String> listaRoles = new ArrayList<String>();
+            protected ArrayList<Object> call() throws Exception {
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                //Datos para buscar la categoría
+                data.add(categoria);
+                data.add(comboSeleccionarEstablCategoria.getValue());
+
+                Message peticion = new Message("CATEGORIA", "GET_DATOS_CATEGORIA", data);
+
+                ArrayList<Object> datoscategoria = new ArrayList<>();
+
                 try {
                     App.out.writeObject(peticion);
                     Message mensajeRespuesta = (Message) App.in.readObject();
-                    listaRoles = (ArrayList<String>) mensajeRespuesta.getData().get(0);
+
+                    datoscategoria = new ArrayList<>(mensajeRespuesta.getData());
 
                 } catch (IOException ex) {
-                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                 }
-                return listaRoles;
+                return datoscategoria;
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
-            ArrayList<String> listaRoles = task.getValue();
-            rolesDisponibles.getItems().clear();
-            rolesDisponibles.getItems().addAll(listaRoles);
+            ArrayList<Object> datoscategoria = task.getValue();
+
+            nombreCategoriaModificar.setText((String) datoscategoria.get(0));
+            descripcionCategoriaModificar.setText((String) datoscategoria.get(1));
+
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
         thread.start();
-
-    }
-
-    @FXML
-    public void editarEstablecimientos(ActionEvent e) {
-
-        if (panelEditarEstabl.isVisible()) {
-            panelEditarEstabl.setVisible(false);
-        } else {
-            panelEditarEstabl.setVisible(true);
-        }
-
-        Task<ArrayList<String>> task = new Task<ArrayList<String>>() {
-            @Override
-            protected ArrayList<String> call() throws Exception {
-                Message peticion = new Message("ESTABLECIMIENTO", "GET_ESTABLECIMIENTOS", new ArrayList<Object>());
-                ArrayList<String> listaEstabl = new ArrayList<String>();
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-                    listaEstabl = (ArrayList<String>) mensajeRespuesta.getData().get(0);
-
-                } catch (IOException ex) {
-                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return listaEstabl;
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            ArrayList<String> listaEstabl = task.getValue();
-            establDisponibles.getItems().clear();
-            establDisponibles.getItems().addAll(listaEstabl);
-        });
-
-        Thread thread = new Thread(task);
-        thread.start();
-
-    }
-
-    @FXML
-    public void cerrarEditarRoles(ActionEvent e) {
-        panelEditarRoles.setVisible(false);
-    }
-
-    @FXML
-    public void cerrarEditarEstabl(ActionEvent e) {
-        panelEditarEstabl.setVisible(false);
-    }
-
-    @FXML
-    public void añadirRol(ActionEvent e) {
-
-        if (rolesUsuarioInfo.getItems().contains(rolesDisponibles.getSelectionModel().getSelectedItem())) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("ERROR");
-            alert.setHeaderText("Error al añadir rol");
-            alert.setContentText("El usuario ya tiene el rol seleccionado.");
-            alert.showAndWait();
-        } else {
-            rolesUsuarioInfo.getItems().add(rolesDisponibles.getSelectionModel().getSelectedItem());
-        }
-
-    }
-
-    @FXML
-    public void quitarRol(ActionEvent e) {
-
-        if (rolesUsuarioInfo.getItems().size() == 1) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("ERROR");
-            alert.setHeaderText("Error al quitar rol");
-            alert.setContentText("El usuario debe tener al menos un rol.");
-            alert.showAndWait();
-        } else {
-            rolesUsuarioInfo.getItems().remove(rolesUsuarioInfo.getSelectionModel().getSelectedItem());
-        }
 
     }
 
@@ -1588,7 +1701,12 @@ public class PropietarioController implements Initializable {
 
     }
 
-    //Añade una categoría al producto en el formulario de alta de producto
+    /**
+     * Añade una categoría del listado de categorias disponibles a las
+     * categorias del producto, comprobando que no puedan repetirse
+     *
+     * @param e Evento
+     */
     @FXML
     public void añadirCategoria(ActionEvent e) {
 
@@ -1598,16 +1716,28 @@ public class PropietarioController implements Initializable {
             alert.setHeaderText("Error al añadir categoría");
             alert.setContentText("El producto ya tiene la categoría seleccionada.");
             alert.showAndWait();
+        } else if (listViewCategorias.getItems().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Error al añadir categoría");
+            alert.setContentText("No hay categorías cargadas.");
+            alert.showAndWait();
         } else {
             listViewCategSeleccionadas.getItems().add(listViewCategorias.getSelectionModel().getSelectedItem());
         }
 
     }
 
-    //Quita una categoría al producto en el formulario de alta de producto
+    /**
+     * Quita una categoria al producto, comprobando que no pueda quedarse sin
+     * ninguna categoría
+     *
+     * @param e
+     */
     @FXML
     public void quitarCategoria(ActionEvent e) {
 
+        /*
         if (listViewCategSeleccionadas.getItems().size() == 1) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("ERROR");
@@ -1615,35 +1745,66 @@ public class PropietarioController implements Initializable {
             alert.setContentText("El producto debe tener al menos una categoría.");
             alert.showAndWait();
         } else {
-            listViewCategSeleccionadas.getItems().remove(listViewCategSeleccionadas.getSelectionModel().getSelectedItem());
-        }
+         */
+        listViewCategSeleccionadas.getItems().remove(listViewCategSeleccionadas.getSelectionModel().getSelectedItem());
+        //}
 
     }
 
+    /**
+     * Cierra la ventana de productos
+     *
+     * @param e Evento
+     */
     @FXML
     public void cerrarVentanaProducto(ActionEvent e) {
-        
+
         nombreProducto.setText("");
         descripcionProducto.setText("");
         precioProducto.setText("");
         stockProducto.setText("");
 
-        //Carga la imagen por defecto del producto
-        try {
-            imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
-        } catch (URISyntaxException ex) {
-            ex.printStackTrace();
+        InputStream defaultImageStream = getClass().getResourceAsStream("/no-image.png");
+        if (defaultImageStream != null) {
+            try {
+                // Crear un archivo temporal para la imagen por defecto
+                File tempFile = File.createTempFile("default-image", ".png");
+                tempFile.deleteOnExit();
+
+                // Copiar el contenido del flujo de entrada al archivo temporal
+                Files.copy(defaultImageStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                // Utilizar el archivo temporal como imagen por defecto
+                imagenSeleccionada = tempFile;
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
 
         String imagePath = imagenSeleccionada.toURI().toString();
         Image image = new Image(imagePath);
 
         imagenProducto.setImage(image);
-        
+
         panelAltaProducto.setVisible(false);
-        
+
     }
 
+    @FXML
+    public void cerrarVentanaCategoria(ActionEvent e) {
+
+        nombreCategoriaModificar.setText("");
+        descripcionCategoriaModificar.setText("");
+
+        panelModificarCategoria.setVisible(false);
+
+    }
+
+    /**
+     * Cierra la ventana de trabajadores
+     *
+     * @param e Evento
+     */
     @FXML
     public void cerrarVentanaTrabajador(ActionEvent e) {
         nombreUsuario.setText("");
@@ -1652,64 +1813,93 @@ public class PropietarioController implements Initializable {
         panelAltaUsuario.setVisible(false);
     }
 
-    //Modifica los datos del usuario en la base de datos. 
-    //En este caso, se envían al servidor los roles y los establecimientos, ya que no tocamos datos de clientes (sin establecimiento vinculado)
+    /**
+     * Actualiza los datos del usuario en la BDD. Solo actualiza usuario, correo
+     * o contraseña
+     *
+     * @param e Evento
+     */
     @FXML
     private void actualizarDatosUsuario(ActionEvent e) {
 
-        //Envía los nuevos datos al servidor
-        Task<Boolean> task = new Task<Boolean>() {
-            @Override
-            protected Boolean call() throws Exception {
+        //Solo envía los datos si se rellena la contraseña
+        if (!passwUsuarioInfo.getText().isEmpty()) {
 
-                ArrayList<Object> nuevosDatos = new ArrayList<Object>();
-                nuevosDatos.add(btnLabelUsuario.getText());
-                nuevosDatos.add(nombreUsuarioInfo.getText());
-                nuevosDatos.add(correoUsuarioInfo.getText());
-                nuevosDatos.add(passwUsuarioInfo.getText());
+            //Envía los nuevos datos al servidor
+            Task<Boolean> task = new Task<Boolean>() {
+                @Override
+                protected Boolean call() throws Exception {
 
-                Message peticion = new Message("USUARIO", "ACTUALIZAR_DATOS", nuevosDatos);
-                boolean respuesta = false;
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
+                    ArrayList<Object> nuevosDatos = new ArrayList<Object>();
+                    nuevosDatos.add(btnLabelUsuario.getText());
+                    nuevosDatos.add(nombreUsuarioInfo.getText());
+                    nuevosDatos.add(correoUsuarioInfo.getText());
+                    nuevosDatos.add(SHA.encrypt(passwUsuarioInfo.getText()));
 
-                    if (respuesta) {
-                        btnLabelUsuario.setText(nombreUsuarioInfo.getText());
+                    Message peticion = new Message("USUARIO", "ACTUALIZAR_DATOS", nuevosDatos);
+                    boolean respuesta = false;
+                    try {
+                        App.out.writeObject(peticion);
+                        Message mensajeRespuesta = (Message) App.in.readObject();
+                        respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                        if (respuesta) {
+                            Platform.runLater(() -> btnLabelUsuario.setText(nombreUsuarioInfo.getText()));
+                        }
+
+                    } catch (IOException ex) {
+                        Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
-                } catch (IOException ex) {
-                    Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                    return respuesta;
                 }
-                return respuesta;
-            }
-        };
+            };
 
-        task.setOnSucceeded(event -> {
-            boolean respuesta = task.getValue();
+            task.setOnRunning(event -> {
 
-            if (respuesta) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Información");
-                alert.setHeaderText("Correcto");
-                alert.setContentText("Datos actualizados.");
-                alert.showAndWait();
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("ERROR");
-                alert.setHeaderText("Error al modificar los datos");
-                alert.setContentText("Revise los datos introducidos.");
-                alert.showAndWait();
-            }
+                spinner.setVisible(true);
 
-        });
+            });
 
-        Thread thread = new Thread(task);
-        thread.start();
+            task.setOnSucceeded(event -> {
+                boolean respuesta = task.getValue();
+
+                if (respuesta) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Información");
+                    alert.setHeaderText("Correcto");
+                    alert.setContentText("Datos actualizados.");
+                    alert.showAndWait();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("ERROR");
+                    alert.setHeaderText("Error al modificar los datos");
+                    alert.setContentText("Revise los datos introducidos.");
+                    alert.showAndWait();
+                }
+
+                spinner.setVisible(false);
+
+            });
+
+            Thread thread = new Thread(task);
+            thread.start();
+        } else {
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Error al modificar los datos");
+            alert.setContentText("Debe introducir una contraseña.");
+            alert.showAndWait();
+
+        }
 
     }
 
+    /**
+     * Añade la nueva categoría a la BDD
+     *
+     * @param e Evento
+     */
     @FXML
     public void añadirNuevaCategoria(ActionEvent e) {
 
@@ -1721,9 +1911,9 @@ public class PropietarioController implements Initializable {
             alert.showAndWait();
 
         } else {
-            Task<Boolean> task = new Task<Boolean>() {
+            Task<ArrayList<Object>> task = new Task<ArrayList<Object>>() {
                 @Override
-                protected Boolean call() throws Exception {
+                protected ArrayList<Object> call() throws Exception {
                     ArrayList<Object> data = new ArrayList<Object>();
 
                     data.add(nombreCategoria.getText());
@@ -1732,20 +1922,32 @@ public class PropietarioController implements Initializable {
 
                     Message peticion = new Message("CATEGORIA", "INSERTAR", data);
                     boolean respuesta = false;
+                    ArrayList<Object> devolver = new ArrayList<Object>();
                     try {
                         App.out.writeObject(peticion);
                         Message mensajeRespuesta = (Message) App.in.readObject();
                         respuesta = (boolean) mensajeRespuesta.getData().get(0);
 
+                        devolver.add(respuesta);
+                        devolver.add(nombreCategoria.getText());
+
                     } catch (IOException ex) {
                         Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    return respuesta;
+                    return devolver;
                 }
             };
 
+            task.setOnRunning(event -> {
+
+                spinner.setVisible(true);
+
+            });
+
             task.setOnSucceeded(event -> {
-                boolean respuesta = task.getValue();
+                ArrayList<Object> datos = task.getValue();
+                boolean respuesta = (boolean) datos.get(0);
+                String categoriaNueva = (String) datos.get(1);
 
                 if (respuesta) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -1756,6 +1958,8 @@ public class PropietarioController implements Initializable {
                     nombreCategoria.setText("");
                     descripcionCategoria.setText("");
 
+                    listViewCategoriasDisponibles.getItems().add(categoriaNueva);
+
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Información");
@@ -1763,6 +1967,8 @@ public class PropietarioController implements Initializable {
                     alert.setContentText("La categoría ya existe");
                     alert.showAndWait();
                 }
+
+                spinner.setVisible(false);
 
             });
 
@@ -1772,6 +1978,11 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Añade un nuevo producto a la BDD
+     *
+     * @param e Evento
+     */
     @FXML
     public void añadirNuevoProducto(ActionEvent e) {
 
@@ -1784,69 +1995,102 @@ public class PropietarioController implements Initializable {
             alert.showAndWait();
 
         } else {
-            Task<Boolean> task = new Task<Boolean>() {
-                @Override
-                protected Boolean call() throws Exception {
-                    ArrayList<Object> data = new ArrayList<Object>();
 
-                    ArrayList<String> categorias = new ArrayList<>(listViewCategSeleccionadas.getItems());
-                    data.add(nombreProducto.getText());
-                    data.add(descripcionProducto.getText());
-                    data.add(comboSeleccionarEstabl.getValue());
-                    data.add(Double.parseDouble(precioProducto.getText()));
-                    data.add(Integer.parseInt(stockProducto.getText()));
+            try {
+                Task<Boolean> task = new Task<Boolean>() {
+                    @Override
+                    protected Boolean call() throws Exception {
+                        ArrayList<Object> data = new ArrayList<Object>();
 
-                    data.add(categorias);
+                        ArrayList<String> categorias = new ArrayList<>();
+                        
+                        for(String c : listViewCategSeleccionadas.getItems()){
+                            
+                            categorias.add(c+";"+comboSeleccionarEstabl.getValue());
+                            
+                        }
+                        
+                        data.add(nombreProducto.getText());
+                        data.add(descripcionProducto.getText());
+                        data.add(comboSeleccionarEstabl.getValue());
+                        double precio = Double.parseDouble(precioProducto.getText());
+                        data.add(precio);
+                        int stock = Integer.parseInt(stockProducto.getText());
+                        data.add(stock);
 
-                    //Obtiene la imagen seleccionada del file chooser. Si no se pulsó el botón para elegir imagen, carga la por defecto
-                    //String imagePath = imagenSeleccionada.toURI().toString();
-                    //Image image = new Image(imagePath);
-                    byte[] imagen = FileUtils.fileToBytes(imagenSeleccionada);
-                    data.add(imagen);
+                        data.add(categorias);
 
-                    Message peticion = new Message("PRODUCTO", "INSERTAR", data);
-                    boolean respuesta = false;
-                    try {
-                        App.out.writeObject(peticion);
-                        Message mensajeRespuesta = (Message) App.in.readObject();
-                        respuesta = (boolean) mensajeRespuesta.getData().get(0);
+                        //Obtiene la imagen seleccionada del file chooser. Si no se pulsó el botón para elegir imagen, carga la por defecto
+                        byte[] imagen = FileUtils.fileToBytes(imagenSeleccionada);
+                        data.add(imagen);
 
-                    } catch (IOException ex) {
-                        Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                        Message peticion = new Message("PRODUCTO", "INSERTAR", data);
+                        boolean respuesta = false;
+                        try {
+                            App.out.writeObject(peticion);
+                            Message mensajeRespuesta = (Message) App.in.readObject();
+                            respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                        } catch (IOException ex) {
+                            Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        return respuesta;
                     }
-                    return respuesta;
-                }
-            };
+                };
 
-            task.setOnSucceeded(event -> {
-                boolean respuesta = task.getValue();
+                task.setOnRunning(event -> {
 
-                if (respuesta) {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Información");
-                    alert.setHeaderText("Correcto");
-                    alert.setContentText("Producto dado de alta.");
-                    alert.showAndWait();
-                    
-                    cerrarVentanaProducto(e);
-                    rellenarProductos(e);
+                    spinner.setVisible(true);
 
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Información");
-                    alert.setHeaderText("ERROR");
-                    alert.setContentText("El producto ya existe");
-                    alert.showAndWait();
-                }
+                });
 
-            });
+                task.setOnSucceeded(event -> {
+                    boolean respuesta = task.getValue();
 
-            Thread thread = new Thread(task);
-            thread.start();
+                    if (respuesta) {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Información");
+                        alert.setHeaderText("Correcto");
+                        alert.setContentText("Producto dado de alta.");
+                        alert.showAndWait();
+
+                        cerrarVentanaProducto(e);
+                        rellenarProductos(e);
+
+                    } else {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Información");
+                        alert.setHeaderText("ERROR");
+                        alert.setContentText("El producto ya existe");
+                        alert.showAndWait();
+                    }
+
+                    spinner.setVisible(false);
+
+                });
+
+                Thread thread = new Thread(task);
+                thread.start();
+
+            } catch (NumberFormatException ex) {
+
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Información");
+                alert.setHeaderText("ERROR");
+                alert.setContentText("El precio y el stock deben tener formato numérico");
+                alert.showAndWait();
+
+            }
+
         }
 
     }
 
+    /**
+     * Añade un nuevo usuario trabajador a la BDD
+     *
+     * @param e Evento
+     */
     @FXML
     public void añadirUsuario(ActionEvent e) {
 
@@ -1870,11 +2114,11 @@ public class PropietarioController implements Initializable {
 
                     //Añade rol trabajador al nuevo usuario
                     roles.add("trabajador"); //Rol trabajador
-                    establecimientos.add(listViewEstablecimientos.getSelectionModel().getSelectedItem());
+                    establecimientos.addAll(listViewEstablecimientosTrabajador.getItems());
 
                     data.add(nombreUsuario.getText());
                     data.add(correoUsuario.getText());
-                    data.add(passwUsuario.getText());
+                    data.add(SHA.encrypt(passwUsuario.getText()));
                     data.add(roles);
                     data.add(establecimientos);
 
@@ -1892,6 +2136,12 @@ public class PropietarioController implements Initializable {
                 }
             };
 
+            task.setOnRunning(event -> {
+
+                spinner.setVisible(true);
+
+            });
+
             task.setOnSucceeded(event -> {
                 boolean respuesta = task.getValue();
 
@@ -1901,7 +2151,7 @@ public class PropietarioController implements Initializable {
                     alert.setHeaderText("Correcto");
                     alert.setContentText("Usuario dado de alta.");
                     alert.showAndWait();
-                    
+
                     cerrarVentanaTrabajador(e);
                     rellenarTrabajadores(e);
                 } else {
@@ -1912,6 +2162,8 @@ public class PropietarioController implements Initializable {
                     alert.showAndWait();
                 }
 
+                spinner.setVisible(false);
+
             });
 
             Thread thread = new Thread(task);
@@ -1920,8 +2172,13 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Actualiza los datos de una categoría en la BDD
+     *
+     * @param e Evento
+     */
     @FXML
-    private void actualizarDatosProducto(ActionEvent e) {
+    private void actualizarDatosCategoria(ActionEvent e) {
 
         //Envía los nuevos datos al servidor
         Task<Boolean> task = new Task<Boolean>() {
@@ -1930,21 +2187,13 @@ public class PropietarioController implements Initializable {
 
                 ArrayList<Object> nuevosDatos = new ArrayList<Object>();
 
-                nuevosDatos.add(productoCargado);
-                nuevosDatos.add(comboSeleccionarEstablListado.getValue());
+                nuevosDatos.add(categoriaCargada);
+                nuevosDatos.add(comboSeleccionarEstablCategoria.getValue());
 
-                nuevosDatos.add(nombreProducto.getText());
-                nuevosDatos.add(descripcionProducto.getText());
-                nuevosDatos.add(precioProducto.getText());
-                nuevosDatos.add(stockProducto.getText());
+                nuevosDatos.add(nombreCategoriaModificar.getText());
+                nuevosDatos.add(descripcionCategoriaModificar.getText());
 
-                byte[] imagenBytes = FileUtils.imageToBytes(imagenProducto.getImage(), "png");
-                nuevosDatos.add(imagenBytes);
-
-                ArrayList<String> categorias = new ArrayList<>(listViewCategSeleccionadas.getItems());
-                nuevosDatos.add(categorias);
-
-                Message peticion = new Message("PRODUCTO", "ACTUALIZAR_DATOS_PRODUCTO", nuevosDatos);
+                Message peticion = new Message("CATEGORIA", "ACTUALIZAR_DATOS_CATEGORIA", nuevosDatos);
                 boolean respuesta = false;
                 try {
                     App.out.writeObject(peticion);
@@ -1952,9 +2201,9 @@ public class PropietarioController implements Initializable {
                     respuesta = (boolean) mensajeRespuesta.getData().get(0);
 
                     if (respuesta) {
-                        cerrarVentanaProducto(e);
-                        rellenarProductos(e);
-                        //btnLabelUsuario.setText(nombreUsuarioInfo.getText());
+                        cerrarVentanaCategoria(e);
+                        rellenarCategoriasAlta(e);
+
                     }
 
                 } catch (IOException ex) {
@@ -1964,6 +2213,12 @@ public class PropietarioController implements Initializable {
             }
         };
 
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
         task.setOnSucceeded(event -> {
             boolean respuesta = task.getValue();
 
@@ -1973,22 +2228,9 @@ public class PropietarioController implements Initializable {
                 alert.setHeaderText("Correcto");
                 alert.setContentText("Datos actualizados.");
                 alert.showAndWait();
-                nombreProducto.setText("");
-                descripcionProducto.setText("");
-                precioProducto.setText("");
-                stockProducto.setText("");
+                nombreCategoriaModificar.setText("");
+                descripcionCategoriaModificar.setText("");
 
-                //Carga la imagen por defecto del producto
-                try {
-                    imagenSeleccionada = new File(getClass().getResource("/no-image.png").toURI());
-                } catch (URISyntaxException ex) {
-                    ex.printStackTrace();
-                }
-
-                String imagePath = imagenSeleccionada.toURI().toString();
-                Image image = new Image(imagePath);
-
-                imagenProducto.setImage(image);
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("ERROR");
@@ -1997,6 +2239,8 @@ public class PropietarioController implements Initializable {
                 alert.showAndWait();
             }
 
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
@@ -2004,70 +2248,235 @@ public class PropietarioController implements Initializable {
 
     }
 
+    /**
+     * Actualiza los datos de un producto en la BDD
+     *
+     * @param e Evento
+     */
+    @FXML
+    private void actualizarDatosProducto(ActionEvent e) {
+
+        if (nombreProducto.getText().isEmpty() || descripcionProducto.getText().isEmpty() || precioProducto.getText().isEmpty()
+                || stockProducto.getText().isEmpty() || listViewCategSeleccionadas.getItems().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Información");
+            alert.setHeaderText("ERROR");
+            alert.setContentText("Debe rellenar todos los campos");
+            alert.showAndWait();
+
+        } else {
+
+            try {
+                //Envía los nuevos datos al servidor
+                Task<Boolean> task = new Task<Boolean>() {
+                    @Override
+                    protected Boolean call() throws Exception {
+
+                        ArrayList<Object> nuevosDatos = new ArrayList<Object>();
+
+                        nuevosDatos.add(productoCargado);
+                        nuevosDatos.add(comboSeleccionarEstablListado.getValue());
+
+                        nuevosDatos.add(nombreProducto.getText());
+                        nuevosDatos.add(descripcionProducto.getText());
+                        double precio = Double.parseDouble(precioProducto.getText());
+                        nuevosDatos.add(precio);
+                        int stock = Integer.parseInt(stockProducto.getText());
+                        nuevosDatos.add(stock);
+
+                        byte[] imagenBytes = FileUtils.imageToBytes(imagenProducto.getImage(), "png");
+                        nuevosDatos.add(imagenBytes);
+
+                        ArrayList<String> categorias = new ArrayList<>(listViewCategSeleccionadas.getItems());
+                        nuevosDatos.add(categorias);
+
+                        Message peticion = new Message("PRODUCTO", "ACTUALIZAR_DATOS_PRODUCTO", nuevosDatos);
+                        boolean respuesta = false;
+                        try {
+                            App.out.writeObject(peticion);
+                            Message mensajeRespuesta = (Message) App.in.readObject();
+                            respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                            if (respuesta) {
+                                cerrarVentanaProducto(e);
+                                rellenarProductos(e);
+
+                            }
+
+                        } catch (IOException ex) {
+                            Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        return respuesta;
+                    }
+                };
+
+                task.setOnRunning(event -> {
+
+                    spinner.setVisible(true);
+
+                });
+
+                task.setOnSucceeded(event -> {
+                    boolean respuesta = task.getValue();
+
+                    if (respuesta) {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Información");
+                        alert.setHeaderText("Correcto");
+                        alert.setContentText("Datos actualizados.");
+                        alert.showAndWait();
+                        nombreProducto.setText("");
+                        descripcionProducto.setText("");
+                        precioProducto.setText("");
+                        stockProducto.setText("");
+
+                        InputStream defaultImageStream = getClass().getResourceAsStream("/no-image.png");
+                        if (defaultImageStream != null) {
+                            try {
+                                // Crear un archivo temporal para la imagen por defecto
+                                File tempFile = File.createTempFile("default-image", ".png");
+                                tempFile.deleteOnExit();
+
+                                // Copiar el contenido del flujo de entrada al archivo temporal
+                                Files.copy(defaultImageStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                                // Utilizar el archivo temporal como imagen por defecto
+                                imagenSeleccionada = tempFile;
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+
+                        String imagePath = imagenSeleccionada.toURI().toString();
+                        Image image = new Image(imagePath);
+
+                        imagenProducto.setImage(image);
+                    } else {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("ERROR");
+                        alert.setHeaderText("Error al modificar los datos");
+                        alert.setContentText("Revise los datos introducidos.");
+                        alert.showAndWait();
+                    }
+
+                    spinner.setVisible(false);
+
+                });
+
+                Thread thread = new Thread(task);
+                thread.start();
+            } catch (NumberFormatException ex) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Información");
+                alert.setHeaderText("ERROR");
+                alert.setContentText("El precio y el stock deben tener formato numérico.");
+                alert.showAndWait();
+            }
+
+        }
+
+    }
+
+    /**
+     * Actualiza los datos de un trabajador en la BDD
+     *
+     * @param e Evento
+     */
     @FXML
     private void actualizarDatosTrabajador(ActionEvent e) {
 
-        //Envía los nuevos datos al servidor
-        Task<Boolean> task = new Task<Boolean>() {
-            @Override
-            protected Boolean call() throws Exception {
+        //Comprueba que los campos no estén vacíos
+        if (nombreUsuario.getText().isEmpty() || correoUsuario.getText().isEmpty()
+                || listViewEstablecimientosTrabajador.getSelectionModel().getSelectedItem() == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Información");
+            alert.setHeaderText("ERROR");
+            alert.setContentText("Debe rellenar todos los campos");
+            alert.showAndWait();
 
-                ArrayList<Object> nuevosDatos = new ArrayList<Object>();
+        } else {
+            //Envía los nuevos datos al servidor
+            Task<Boolean> task = new Task<Boolean>() {
+                @Override
+                protected Boolean call() throws Exception {
 
-                nuevosDatos.add(trabajadorCargado);
+                    ArrayList<Object> nuevosDatos = new ArrayList<Object>();
 
-                nuevosDatos.add(nombreUsuario.getText());
-                nuevosDatos.add(correoUsuario.getText());
-                nuevosDatos.add(passwUsuario.getText());
+                    nuevosDatos.add(trabajadorCargado);
 
-                ArrayList<String> establecimientos = new ArrayList<>(listViewEstablecimientosTrabajador.getItems());
-                nuevosDatos.add(establecimientos);
+                    nuevosDatos.add(nombreUsuario.getText());
+                    nuevosDatos.add(correoUsuario.getText());
 
-                Message peticion = new Message("USUARIO", "ACTUALIZAR_DATOS_TRABAJADOR", nuevosDatos);
-                boolean respuesta = false;
-                try {
-                    App.out.writeObject(peticion);
-                    Message mensajeRespuesta = (Message) App.in.readObject();
-                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
-
-                    if (respuesta) {
-                        cerrarVentanaTrabajador(e);
-                        rellenarTrabajadores(e);
-                        //btnLabelUsuario.setText(nombreUsuarioInfo.getText());
+                    //Comprueba si se ha modificado la contraseña. Si no se introduce una, se envía la contraseña original almacenada en memoria
+                    if (passwUsuario.getText().isEmpty()) {
+                        nuevosDatos.add(passwTrabajadorModificar);
+                    } //Si se modifica, envía la nueva contraseña encriptada
+                    else {
+                        nuevosDatos.add(SHA.encrypt(passwUsuario.getText()));
                     }
 
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+                    ArrayList<String> establecimientos = new ArrayList<>(listViewEstablecimientosTrabajador.getItems());
+                    nuevosDatos.add(establecimientos);
+
+                    Message peticion = new Message("USUARIO", "ACTUALIZAR_DATOS_TRABAJADOR", nuevosDatos);
+                    boolean respuesta = false;
+                    try {
+                        App.out.writeObject(peticion);
+                        Message mensajeRespuesta = (Message) App.in.readObject();
+                        respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                        if (respuesta) {
+                            cerrarVentanaTrabajador(e);
+                            rellenarTrabajadores(e);
+                        }
+
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    return respuesta;
                 }
-                return respuesta;
-            }
-        };
+            };
 
-        task.setOnSucceeded(event -> {
-            boolean respuesta = task.getValue();
+            task.setOnRunning(event -> {
 
-            if (respuesta) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Información");
-                alert.setHeaderText("Correcto");
-                alert.setContentText("Datos actualizados.");
-                alert.showAndWait();
-                
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("ERROR");
-                alert.setHeaderText("Error al modificar los datos");
-                alert.setContentText("Revise los datos introducidos.");
-                alert.showAndWait();
-            }
+                spinner.setVisible(true);
 
-        });
+            });
 
-        Thread thread = new Thread(task);
-        thread.start();
+            task.setOnSucceeded(event -> {
+                boolean respuesta = task.getValue();
+
+                if (respuesta) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Información");
+                    alert.setHeaderText("Correcto");
+                    alert.setContentText("Datos actualizados.");
+                    alert.showAndWait();
+
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("ERROR");
+                    alert.setHeaderText("Error al modificar los datos");
+                    alert.setContentText("Revise los datos introducidos.");
+                    alert.showAndWait();
+                }
+
+                spinner.setVisible(false);
+
+            });
+
+            Thread thread = new Thread(task);
+            thread.start();
+        }
 
     }
-    
+
+    /**
+     * Borra un producto de la BDD
+     *
+     * @param producto El nombre del producto a borrar
+     * @param establecimiento El establecimiento al que pertenece el producto
+     */
     private void borrarProducto(String producto, String establecimiento) {
 
         //Envía los nuevos datos al servidor
@@ -2080,7 +2489,6 @@ public class PropietarioController implements Initializable {
                 data.add(producto);
                 data.add(establecimiento);
 
-                
                 Message peticion = new Message("PRODUCTO", "BORRAR", data);
                 boolean respuesta = false;
                 try {
@@ -2094,6 +2502,12 @@ public class PropietarioController implements Initializable {
                 return respuesta;
             }
         };
+
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
 
         task.setOnSucceeded(event -> {
             boolean respuesta = task.getValue();
@@ -2113,13 +2527,85 @@ public class PropietarioController implements Initializable {
                 alert.showAndWait();
             }
 
+            spinner.setVisible(false);
+
         });
 
         Thread thread = new Thread(task);
         thread.start();
 
     }
-    
+
+    /**
+     * Borra una categoria de un establecimiento
+     *
+     * @param categoria La categoría a borrar
+     * @param establecimiento El establecimiento donde borrarla
+     */
+    private void borrarCategoria(String categoria, String establecimiento) {
+
+        //Envía los nuevos datos al servidor
+        Task<Boolean> task = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+
+                ArrayList<Object> data = new ArrayList<Object>();
+
+                data.add(categoria);
+                data.add(establecimiento);
+
+                Message peticion = new Message("CATEGORIA", "BORRAR", data);
+                boolean respuesta = false;
+                try {
+                    App.out.writeObject(peticion);
+                    Message mensajeRespuesta = (Message) App.in.readObject();
+                    respuesta = (boolean) mensajeRespuesta.getData().get(0);
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta;
+            }
+        };
+
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
+
+        task.setOnSucceeded(event -> {
+            boolean respuesta = task.getValue();
+
+            if (respuesta) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Información");
+                alert.setHeaderText("Correcto");
+                alert.setContentText("Categoría eliminada.");
+                alert.showAndWait();
+                rellenarCategoriasAlta(null);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("ERROR");
+                alert.setHeaderText("Error al eliminar la categoría");
+                alert.setContentText("Compruebe que no está siendo usada en algún producto.");
+                alert.showAndWait();
+            }
+
+            spinner.setVisible(false);
+
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+
+    /**
+     * Borra un trabajador de la BDD
+     *
+     * @param trabajador El nombre del trabajador a borrar
+     */
     private void borrarTrabajador(String trabajador) {
 
         //Envía los nuevos datos al servidor
@@ -2131,7 +2617,6 @@ public class PropietarioController implements Initializable {
 
                 data.add(trabajador);
 
-                
                 Message peticion = new Message("USUARIO", "BORRAR", data);
                 boolean respuesta = false;
                 try {
@@ -2145,6 +2630,12 @@ public class PropietarioController implements Initializable {
                 return respuesta;
             }
         };
+
+        task.setOnRunning(event -> {
+
+            spinner.setVisible(true);
+
+        });
 
         task.setOnSucceeded(event -> {
             boolean respuesta = task.getValue();
@@ -2160,9 +2651,10 @@ public class PropietarioController implements Initializable {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("ERROR");
                 alert.setHeaderText("Error al dar de baja al trabajador");
-                //alert.setContentText("Compruebe que no está siendo usado en algún pedido.");
                 alert.showAndWait();
             }
+
+            spinner.setVisible(false);
 
         });
 
@@ -2171,7 +2663,12 @@ public class PropietarioController implements Initializable {
 
     }
 
-    //Envía al servidor el nombre del usuario que cierra sesión, y vuelve a la pantalla de login
+    /**
+     * Envía al servidor el nombre del usuario que cierra sesión, y vuelve a la
+     * pantalla de login
+     *
+     * @param e Evento
+     */
     @FXML
     public void logout(ActionEvent e) {
 
@@ -2211,6 +2708,7 @@ public class PropietarioController implements Initializable {
                     Parent root1 = (Parent) fxmlLoader.load();
                     Stage stage = new Stage();
                     stage.setTitle("QuickTap - Login");
+                    stage.initStyle(StageStyle.UNDECORATED);
                     stage.setScene(new Scene(root1, 681, 468));
                     stage.show();
 
@@ -2240,6 +2738,79 @@ public class PropietarioController implements Initializable {
         Thread thread = new Thread(task);
         thread.start();
 
+    }
+
+    /**
+     * Busca productos por el filtro dado
+     *
+     * @param textoFiltro El dato introducido por el usuario
+     */
+    private void buscarProducto(String textoFiltro) {
+
+        //Crea un Predicate que filtre las filas según el nombre
+        Predicate<List<Object>> filtro = fila -> {
+
+            String campo = "";
+            switch (comboFiltroProducto.getValue()) {
+                case "Nombre":
+                    campo = fila.get(0).toString();
+                    break;
+                case "Descripción":
+                    campo = fila.get(1).toString();
+                    break;
+                case "Precio":
+                    campo = fila.get(2).toString();
+                    break;
+                case "Stock":
+                    campo = fila.get(3).toString();
+                    break;
+                case "Categorías":
+                    campo = fila.get(5).toString();
+                    break;
+            }
+
+            return campo.contains(textoFiltro); //Verifica si el nombre contiene el texto de filtro
+        };
+
+        //Aplica el filtro a la lista de datos
+        List<List<Object>> datosFiltrados = productos.stream()
+                .filter(filtro)
+                .collect(Collectors.toList());
+
+        //Actualiza la tabla con los datos filtrados
+        tablaProductos.setItems(FXCollections.observableArrayList(datosFiltrados));
+    }
+
+    /**
+     * Busca trabajadores por el filtro dado
+     *
+     * @param textoFiltro El dato introducido por el usuario
+     */
+    private void buscarTrabajador(String textoFiltro) {
+
+        //Crea un Predicate que filtre las filas según el nombre
+        Predicate<List<Object>> filtro = fila -> {
+
+            String campo = "";
+            switch (comboFiltroTrabajador.getValue()) {
+                case "Nombre":
+                    campo = fila.get(0).toString();
+                    break;
+                case "Correo":
+                    campo = fila.get(1).toString();
+                    break;
+            }
+
+            return campo.contains(textoFiltro); //Verifica si el nombre contiene el texto de filtro
+        };
+
+        //Aplica el filtro a la lista de datos
+        List<List<Object>> datosFiltrados = trabajadores.stream()
+                .filter(filtro)
+                .collect(Collectors.toList());
+
+        //Actualiza la tabla con los datos filtrados
+        tablaTrabajadores.setItems(FXCollections.observableArrayList(datosFiltrados));
     }
 
 }

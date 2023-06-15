@@ -40,9 +40,15 @@ public class VerEstablecimientosController implements Initializable {
     
     private String usuario;
     
+    /**
+     * Inicializa la ventana
+     * @param url
+     * @param rb 
+     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
+        //Obtiene la caja generada en cada establecimiento
         Task<ArrayList<ArrayList<Object>>> task = new Task<ArrayList<ArrayList<Object>>>() {
             @Override
             protected ArrayList<ArrayList<Object>> call() throws Exception {
@@ -94,6 +100,10 @@ public class VerEstablecimientosController implements Initializable {
         
     }   
     
+    /**
+     * Establece el usuario de la ventana principal
+     * @param usuario El nombre del usuario logeado
+     */
     public void setUsuario(String usuario){
         this.usuario = usuario;
     }

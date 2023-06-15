@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="284.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.VerRegistroErroresController">
+   <children>
+      <Label alignment="CENTER" layoutY="-1.0" prefHeight="43.0" prefWidth="284.0" style="-fx-background-color: #454545;" text="Registro de errores" textFill="#ff6000" AnchorPane.bottomAnchor="357.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <ListView fx:id="listaviewErrores" layoutY="42.0" prefHeight="358.0" prefWidth="284.0" />
+   </children>
+</AnchorPane>

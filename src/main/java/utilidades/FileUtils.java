@@ -10,6 +10,10 @@ import java.io.*;
 import javafx.scene.image.Image;
 import javax.imageio.ImageIO;
 
+/**
+ * Clase con utilidades de conversión para la imagen
+ * @author rafam
+ */
 public class FileUtils {
 
     public static byte[] fileToBytes(File file) {

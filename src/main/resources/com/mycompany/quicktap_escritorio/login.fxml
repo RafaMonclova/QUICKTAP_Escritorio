@@ -2,6 +2,7 @@
 
 <?import io.github.palexdev.materialfx.controls.MFXButton?>
 <?import io.github.palexdev.materialfx.controls.MFXPasswordField?>
+<?import io.github.palexdev.materialfx.controls.MFXProgressSpinner?>
 <?import io.github.palexdev.materialfx.controls.MFXTextField?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.effect.ColorAdjust?>
@@ -11,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="468.0" prefWidth="681.0" style="-fx-background-color: #FFE6C7;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.LoginController">
+<AnchorPane fx:id="panelPrincipal" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="468.0" prefWidth="681.0" style="-fx-background-color: #FFE6C7;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quicktap_escritorio.LoginController">
    <children>
       <Label layoutX="300.0" layoutY="110.0" text="Email" AnchorPane.leftAnchor="300.0" AnchorPane.rightAnchor="238.39999999999998">
          <font>
@@ -51,6 +52,62 @@
             <ColorAdjust hue="0.56" />
          </effect>
       </MFXTextField>
-      <MFXButton layoutX="623.0" layoutY="26.0" onAction="#salir" text="Salir" />
+      <MFXButton layoutX="607.0" layoutY="14.0" onAction="#salir" prefHeight="35.0" prefWidth="59.0" style="-fx-background-color: red;" text="X" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font></MFXButton>
+      <AnchorPane fx:id="panelRed" layoutX="289.0" layoutY="80.0" prefHeight="267.0" prefWidth="365.0" style="-fx-background-color: white; -fx-border-color: black;" visible="false">
+         <children>
+            <MFXTextField fx:id="campoIP" floatMode="BORDER" floatingText="IP" layoutX="95.0" layoutY="58.0" prefHeight="50.0" prefWidth="176.0" style="-fx-border-color: black;" />
+            <MFXTextField fx:id="campoPuerto" floatMode="BORDER" floatingText="Puerto" layoutX="95.0" layoutY="134.0" prefHeight="50.0" prefWidth="176.0" style="-fx-border-color: black;" />
+            <Label layoutX="14.0" layoutY="14.0" prefHeight="27.0" prefWidth="242.0" text="Configuración de IP y Puerto">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <MFXButton buttonType="RAISED" layoutX="244.0" layoutY="211.0" onAction="#guardarDatosRed" rippleColor="#ff6000" text="Guardar">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </MFXButton>
+            <MFXButton buttonType="RAISED" layoutX="58.0" layoutY="211.0" onAction="#panelRed" rippleColor="#ff6000" text="Cancelar">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </MFXButton>
+         </children>
+      </AnchorPane>
+      <MFXButton ellipsisString="" layoutX="607.0" layoutY="406.0" onAction="#panelRed" prefHeight="35.0" prefWidth="41.0" style="-fx-background-radius: 122;">
+         <graphic>
+            <ImageView fitHeight="39.0" fitWidth="42.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../../../icons8_settings_96px.png" />
+               </image>
+            </ImageView>
+         </graphic>
+      </MFXButton>
+      <AnchorPane fx:id="panelRegistroAdmin" layoutX="267.0" layoutY="5.0" prefHeight="452.0" prefWidth="398.0" style="-fx-background-color: white; -fx-border-color: black;" visible="false">
+         <children>
+            <MFXTextField fx:id="campoUsuarioAdmin" floatMode="BORDER" floatingText="Nombre*" layoutX="75.0" layoutY="163.0" prefHeight="50.0" prefWidth="258.0" style="-fx-border-color: black;" />
+            <MFXTextField fx:id="campoCorreoAdmin" floatMode="BORDER" floatingText="Correo*" layoutX="75.0" layoutY="226.0" prefHeight="50.0" prefWidth="258.0" style="-fx-border-color: black;" />
+            <Label layoutX="14.0" layoutY="89.0" prefHeight="59.0" prefWidth="354.0" text="Antes de empezar, debe configurar la cuenta de administrador " wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <MFXButton buttonType="RAISED" layoutX="140.0" layoutY="373.0" onAction="#registrarAdmin" prefHeight="46.0" prefWidth="117.0" rippleColor="#ff6000" text="Registrar">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </MFXButton>
+            <MFXPasswordField fx:id="campoPasswAdmin" floatingText="Contraseña*" layoutX="75.0" layoutY="294.0" prefHeight="50.0" prefWidth="258.0" style="-fx-border-color: black;" />
+            <Label layoutX="17.0" layoutY="14.0" prefHeight="75.0" prefWidth="375.0" text="Parece que es la primera vez que inicia el servicio" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <MFXProgressSpinner fx:id="spinner" layoutX="363.0" layoutY="137.0" prefHeight="193.0" prefWidth="219.0" visible="false" />
    </children>
 </AnchorPane>
