@@ -2287,7 +2287,12 @@ public class PropietarioController implements Initializable {
                         byte[] imagenBytes = FileUtils.imageToBytes(imagenProducto.getImage(), "png");
                         nuevosDatos.add(imagenBytes);
 
-                        ArrayList<String> categorias = new ArrayList<>(listViewCategSeleccionadas.getItems());
+                        ArrayList<String> categorias = new ArrayList<>();
+                        
+                        for(String c : listViewCategSeleccionadas.getItems()){
+                            categorias.add(c+";"+comboSeleccionarEstablListado.getValue());
+                        }
+                        
                         nuevosDatos.add(categorias);
 
                         Message peticion = new Message("PRODUCTO", "ACTUALIZAR_DATOS_PRODUCTO", nuevosDatos);
@@ -2387,7 +2392,8 @@ public class PropietarioController implements Initializable {
 
         //Comprueba que los campos no estén vacíos
         if (nombreUsuario.getText().isEmpty() || correoUsuario.getText().isEmpty()
-                || listViewEstablecimientosTrabajador.getSelectionModel().getSelectedItem() == null) {
+                //|| listViewEstablecimientosTrabajador.getSelectionModel().getSelectedItem() == null) {
+                || listViewEstablecimientosTrabajador.getItems().isEmpty() ) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Información");
             alert.setHeaderText("ERROR");

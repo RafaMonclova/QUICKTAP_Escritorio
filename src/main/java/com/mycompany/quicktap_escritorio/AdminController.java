@@ -1510,7 +1510,7 @@ public class AdminController implements Initializable {
         Predicate<List<Object>> filtro = fila -> {
 
             String campo = "";
-            switch (comboFiltroPropietario.getValue()) {
+            switch (comboFiltroEstabl.getValue()) {
                 case "Nombre":
                     campo = fila.get(0).toString();
                     break;
